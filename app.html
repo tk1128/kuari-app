@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>kuari - 投稿するだけで、あなたが分かる。</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f5f0;
+  --card: #ffffff;
+  --border: #e4e0d8;
+  --gold: #a07010;
+  --gold2: #c89820;
+  --green: #1e8050;
+  --blue: #2860b8;
+  --purple: #5830a8;
+  --text: #1a1810;
+  --muted: #999;
+}
+
+body {
+  background: #181818;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: -apple-system, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+/* ===== DEVICE FRAME (desktop) ===== */
+.device {
+  width: 393px;
+  height: 852px;
+  background: #000;
+  border-radius: 54px;
+  border: 3px solid #2a2a2a;
+  box-shadow: 0 0 0 1px #111, 0 0 80px rgba(0,0,0,0.8), inset 0 0 0 1px #333;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Mobile: fullscreen */
+@media (max-width: 430px) {
+  body { background: #0a0a0a; display: block; overflow: hidden; }
+  .device {
+    width: 100vw; height: 100vh; height: 100dvh;
+    border-radius: 0; border: none; box-shadow: none;
+  }
+  .dynamic-island { display: none; }
+}
+
+.dynamic-island {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 34px; background: #000; border-radius: 20px; z-index: 999;
+}
+
+.status-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 54px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 20px 8px; z-index: 998; background: transparent;
+}
+@media (max-width: 430px) {
+  .status-bar { background: var(--bg); }
+}
+.status-time { font-size: 15px; font-weight: 600; color: var(--text); }
+.status-icons { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text); }
+
+/* ===== APP ===== */
+.app {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg); border-radius: 54px; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+@media (max-width: 430px) { .app { border-radius: 0; } }
+
+/* ===== SCREENS ===== */
+.screen {
+  display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  flex-direction: column; opacity: 0;
+  transition: opacity 200ms ease, transform 200ms ease;
+  transform: translateY(6px);
+}
+.screen.active { display: flex; opacity: 1; transform: translateY(0); }
+
+.scroll-area { overflow-y: scroll; -webkit-overflow-scrolling: touch; flex: 1; }
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 82px;
+  background: rgba(247,245,240,0.95); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-around;
+  padding-top: 10px; z-index: 100; border-radius: 0 0 54px 54px;
+}
+@media (max-width: 430px) { .bottom-nav { border-radius: 0; } }
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer; padding: 6px 14px; border-radius: 12px;
+  transition: background 0.15s; position: relative;
+}
+.nav-item:active { background: rgba(255,255,255,0.05); }
+.nav-icon { font-size: 22px; line-height: 1; }
+.nav-label { font-size: 9px; color: var(--muted); }
+.nav-item.active .nav-label { color: var(--gold); }
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 4px var(--gold)); }
+.nav-badge {
+  position: absolute; top: 2px; right: 6px;
+  width: 16px; height: 16px; background: #e03030; border-radius: 50%;
+  font-size: 9px; font-weight: 700; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ===== SCREEN HEADER ===== */
+.screen-header {
+  position: absolute; top: 54px; left: 0; right: 0; height: 52px;
+  display: flex; align-items: center; padding: 0 16px; z-index: 90;
+  background: rgba(247,245,240,0.9); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ===== HOME ===== */
+#screen-home .screen-header { justify-content: space-between; }
+.logo {
+  font-size: 26px; font-weight: 800;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; letter-spacing: -0.5px;
+}
+.header-tagline { font-size: 10px; color: var(--muted); text-align: center; }
+.header-icon-btn { font-size: 22px; cursor: pointer; padding: 4px; }
+
+/* Stories */
+.stories-wrapper {
+  padding: 12px 0 8px; overflow-x: scroll; -webkit-overflow-scrolling: touch;
+  display: flex; gap: 12px; padding-left: 14px;
+}
+.stories-wrapper::-webkit-scrollbar { display: none; }
+.story-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 5px; cursor: pointer; flex-shrink: 0;
+}
+.story-avatar-wrap {
+  width: 58px; height: 58px; border-radius: 50%;
+  padding: 2.5px; background: var(--border);
+}
+.story-avatar-wrap.unread {
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+}
+.story-avatar {
+  width: 100%; height: 100%; border-radius: 50%; background: var(--card);
+  border: 2px solid var(--bg); overflow: hidden;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.story-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.story-label { font-size: 10px; color: var(--text); max-width: 58px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Feed */
+.feed { padding: 0 0 90px; }
+.feed-card { background: transparent; margin: 0; border-bottom: 1px solid #181818; }
+
+.card-header { display: flex; align-items: center; padding: 10px 14px; gap: 10px; }
+.card-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg); border: 1.5px solid var(--border);
+  flex-shrink: 0; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.card-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.card-user-info { flex: 1; }
+.card-username { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 4px; }
+.verified-badge { font-size: 11px; background: linear-gradient(135deg, var(--gold), var(--gold2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.card-time { display: none; }
+.ig-badge { font-size: 17px; cursor: pointer; position: relative; }
+.ig-badge-dot {
+  position: absolute; top: -2px; right: -2px;
+  width: 8px; height: 8px; background: var(--gold); border-radius: 50%;
+  border: 1.5px solid var(--card);
+}
+.card-menu { font-size: 18px; color: var(--muted); cursor: pointer; padding: 4px; }
+
+/* Card image — real photo */
+.card-image-wrap {
+  width: 100%; aspect-ratio: 1/1; overflow: hidden; position: relative;
+  background: #0a0a0a; cursor: pointer;
+}
+.card-img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.3s ease;
+}
+/* fallback (no real photo) */
+.card-image-fallback {
+  width: 100%; aspect-ratio: 1/1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; cursor: pointer;
+}
+.card-image-fallback-emoji { font-size: 56px; }
+.card-image-fallback-text { margin-top: 8px; font-size: 13px; color: rgba(240,240,236,0.7); font-weight: 500; }
+
+/* Double-tap heart animation */
+.like-heart-overlay {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+  font-size: 80px; pointer-events: none; z-index: 10;
+  animation: none;
+}
+.like-heart-overlay.pop { animation: bigHeartPop 0.7s ease forwards; }
+@keyframes bigHeartPop {
+  0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  40% { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+  70% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%,-50%) scale(1.1); opacity: 0; }
+}
+
+/* Card actions */
+.card-actions { display: flex; align-items: center; padding: 10px 14px 6px; gap: 16px; }
+.action-btn { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; color: var(--muted); transition: color 0.15s; user-select: none; }
+.action-btn.liked .action-icon { color: #e03040; }
+.action-btn.liked .action-count { color: #e03040; }
+.action-icon { font-size: 25px; transition: transform 0.3s, color 0.3s; }
+.action-icon.pop { animation: heartPop 0.3s ease; }
+@keyframes heartPop { 0%{transform:scale(1)} 50%{transform:scale(1.5)} 100%{transform:scale(1)} }
+.action-count { display: none; }
+.spacer { flex: 1; }
+.nft-btn {
+  background: linear-gradient(135deg, #2a1a40, #1a1030);
+  border: 1px solid #4a2a70; border-radius: 20px;
+  padding: 5px 12px; font-size: 11px; color: #b080e0; cursor: pointer; transition: all 0.15s;
+}
+.nft-btn:active { opacity: 0.7; }
+.nft-btn.minted { background: linear-gradient(135deg, #1a2a10, #102010); border-color: var(--green); color: var(--green); }
+
+.card-body { padding: 4px 14px 16px; }
+.card-likes { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+.card-caption { font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 5px; }
+.card-caption span.username { font-weight: 600; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.card-tag { font-size: 11px; color: var(--gold); cursor: pointer; }
+.peace-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(42,154,96,0.1); border: 1px solid rgba(42,154,96,0.3);
+  border-radius: 20px; padding: 4px 10px; font-size: 11px; color: var(--green);
+  cursor: pointer; transition: background 0.15s;
+}
+.peace-badge:active { background: rgba(42,154,96,0.2); }
+
+/* ===== EXPLORE ===== */
+#screen-explore .scroll-area { padding-top: 106px; padding-bottom: 90px; }
+.search-bar-wrap {
+  position: absolute; top: 54px; left: 0; right: 0; z-index: 90;
+  padding: 8px 14px 6px; background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.search-bar {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 10px 14px; width: 100%; font-size: 13px; color: var(--text);
+  outline: none; font-family: inherit;
+}
+.search-bar::placeholder { color: var(--muted); }
+.search-bar:focus { border-color: var(--gold); }
+
+.category-chips { display: flex; gap: 8px; overflow-x: scroll; padding: 10px 14px 0; }
+.category-chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0; background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 6px 14px; font-size: 12px; color: var(--text);
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.chip.active { background: rgba(200,160,48,0.15); border-color: var(--gold); color: var(--gold); }
+
+.explore-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 10px 0 0; }
+.explore-cell {
+  aspect-ratio: 1; position: relative; cursor: pointer; overflow: hidden; background: var(--card);
+}
+.explore-cell:active { opacity: 0.8; }
+.explore-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.explore-cell-fallback {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center; font-size: 32px;
+}
+.explore-score {
+  position: absolute; top: 6px; left: 6px;
+  background: rgba(0,0,0,0.7); border: 1px solid rgba(200,160,48,0.4);
+  border-radius: 8px; padding: 2px 6px; font-size: 10px; color: var(--gold2);
+}
+.explore-multi-icon {
+  position: absolute; top: 6px; right: 6px; font-size: 12px;
+}
+
+/* ===== POST SCREEN ===== */
+#screen-post { background: var(--bg); z-index: 200; }
+#screen-post .screen-header { top: 0; background: var(--bg); border-bottom: 1px solid var(--border); }
+.post-close-btn { font-size: 22px; color: var(--muted); cursor: pointer; padding: 4px; }
+.post-title { flex: 1; text-align: center; font-size: 15px; font-weight: 600; color: var(--text); }
+.post-next-btn { font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer; padding: 4px; transition: color 0.15s; }
+.post-next-btn.active { color: var(--gold); }
+
+#screen-post .scroll-area { padding-top: 52px; padding-bottom: 20px; }
+.post-form { padding: 14px; }
+
+/* Photo picker area */
+.post-photo-wrap { margin-bottom: 14px; }
+.post-photo-area {
+  width: 100%; aspect-ratio: 1/1; border-radius: 16px;
+  border: 2px dashed var(--border); overflow: hidden; position: relative;
+  cursor: pointer; background: var(--card);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  transition: border-color 0.2s;
+}
+.post-photo-area:active { border-color: var(--gold); }
+.post-photo-area.has-photo { border: none; }
+.photo-placeholder-icon { font-size: 36px; }
+.photo-placeholder-hint { font-size: 13px; color: var(--muted); font-weight: 500; }
+.photo-placeholder-sub { font-size: 11px; color: #444; }
+
+#photoPreview {
+  width: 100%; height: 100%; object-fit: cover; display: none; border-radius: 14px;
+  transition: filter 0.3s;
+}
+.photo-change-btn {
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px; padding: 5px 12px; font-size: 11px; color: #fff;
+  cursor: pointer; backdrop-filter: blur(4px);
+}
+
+/* Filter strip */
+.filter-strip {
+  display: none; overflow-x: scroll; -webkit-overflow-scrolling: touch;
+  padding: 10px 0 12px; gap: 10px; margin-top: 0;
+}
+.filter-strip::-webkit-scrollbar { display: none; }
+.filter-strip.visible { display: flex; }
+.filter-opt {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  cursor: pointer;
+}
+.filter-opt-thumb {
+  width: 60px; height: 60px; border-radius: 10px; overflow: hidden;
+  border: 2px solid transparent; transition: border-color 0.15s; background: var(--card);
+}
+.filter-opt.active .filter-opt-thumb { border-color: var(--gold); }
+.filter-opt-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.filter-opt-thumb-fallback {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+}
+.filter-opt-label { font-size: 10px; color: var(--muted); }
+.filter-opt.active .filter-opt-label { color: var(--gold); font-weight: 600; }
+
+/* Filter CSS classes */
+.filter-normal { filter: none; }
+.filter-warm { filter: sepia(0.2) saturate(1.3) brightness(1.05); }
+.filter-cool { filter: saturate(0.9) hue-rotate(15deg) brightness(1.06); }
+.filter-mono { filter: grayscale(1) contrast(1.15); }
+.filter-wabi { filter: sepia(0.35) contrast(0.92) brightness(0.92) saturate(0.75); }
+.filter-vivid { filter: saturate(1.7) contrast(1.08) brightness(1.04); }
+.filter-fade { filter: saturate(0.7) brightness(1.1) contrast(0.88); }
+
+.post-textarea {
+  width: 100%; background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--text);
+  outline: none; font-family: inherit; resize: none; height: 90px; line-height: 1.5;
+  margin-bottom: 12px;
+}
+.post-textarea::placeholder { color: var(--muted); }
+.post-textarea:focus { border-color: var(--gold); }
+
+.tag-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tag-chip {
+  background: rgba(200,160,48,0.1); border: 1px solid rgba(200,160,48,0.3);
+  border-radius: 16px; padding: 5px 10px; font-size: 11px; color: var(--gold);
+  cursor: pointer; transition: background 0.15s;
+}
+.tag-chip:active { background: rgba(200,160,48,0.2); }
+
+.ai-meter {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; margin-bottom: 14px;
+}
+.ai-meter-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.ai-meter-title { font-size: 12px; color: var(--muted); }
+.ai-meter-result { font-size: 12px; font-weight: 600; color: var(--green); }
+.ai-meter-result.low { color: #e07030; }
+.meter-bar-bg { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.meter-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), #50e090); border-radius: 4px; transition: width 0.4s ease; }
+.meter-bar-fill.low { background: linear-gradient(90deg, #e07030, #f09050); }
+
+.toggles { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+}
+.toggle-label { font-size: 13px; color: var(--text); }
+.toggle-switch { width: 44px; height: 24px; background: var(--green); border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; }
+.toggle-switch.off { background: #333; }
+.toggle-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+.toggle-switch:not(.off) .toggle-knob { transform: translateX(20px); }
+
+.human-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(42,154,96,0.1); border: 1px solid rgba(42,154,96,0.4);
+  border-radius: 20px; padding: 8px 14px; font-size: 12px; color: var(--green); margin-bottom: 16px;
+}
+
+.post-submit-btn {
+  width: 100%; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 700;
+  color: #000; background: linear-gradient(135deg, var(--gold), var(--gold2));
+  cursor: pointer; border: none; font-family: inherit; transition: opacity 0.15s;
+}
+.post-submit-btn:disabled { background: #2a2a2a; color: var(--muted); cursor: default; }
+
+/* Post success overlay */
+.post-success {
+  display: none; position: absolute; inset: 0; background: #000; z-index: 300;
+  flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 16px; border-radius: 54px;
+}
+@media (max-width: 430px) { .post-success { border-radius: 0; } }
+.post-success.visible { display: flex; }
+.success-sparks { font-size: 48px; animation: sparkle 1s ease infinite alternate; }
+@keyframes sparkle { from{transform:scale(0.9)} to{transform:scale(1.1);filter:drop-shadow(0 0 20px #f0d060)} }
+.success-nft-title {
+  font-size: 24px; font-weight: 800;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.success-img-wrap { width: 120px; height: 120px; border-radius: 16px; overflow: hidden; border: 2px solid var(--gold); }
+.success-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.success-img-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 50px; }
+.success-xp { font-size: 18px; color: var(--green); font-weight: 700; }
+.success-sub { font-size: 13px; color: var(--muted); }
+.success-continue-btn {
+  margin-top: 8px; padding: 14px 40px; border-radius: 16px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #000; font-size: 15px; font-weight: 700; cursor: pointer; border: none; font-family: inherit;
+}
+
+/* ===== NOTIFICATIONS ===== */
+#screen-notif .scroll-area { padding-top: 106px; padding-bottom: 90px; }
+#screen-notif .screen-header { justify-content: center; }
+.notif-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.notif-list { padding: 0 14px; }
+.notif-item { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.notif-icon { font-size: 24px; flex-shrink: 0; }
+.notif-content { flex: 1; }
+.notif-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+.notif-time { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.notif-action-btn {
+  display: inline-block; margin-top: 6px; padding: 5px 12px;
+  border: 1px solid var(--border); border-radius: 8px; font-size: 11px; color: var(--gold); cursor: pointer;
+}
+.notif-action-btn:active { background: rgba(200,160,48,0.1); }
+.notif-thumb {
+  width: 44px; height: 44px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--card);
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.notif-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ===== PROFILE ===== */
+#screen-profile .scroll-area { padding-top: 106px; padding-bottom: 90px; }
+#screen-profile .screen-header { justify-content: space-between; }
+.profile-header-inner { text-align: center; padding: 20px 20px 16px; }
+.profile-avatar-wrap { position: relative; display: inline-block; margin-bottom: 10px; }
+.profile-avatar {
+  width: 84px; height: 84px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 800; color: #000; overflow: hidden;
+}
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-verified-badge { position: absolute; bottom: 0; right: 0; font-size: 20px; background: var(--bg); border-radius: 50%; padding: 1px; }
+.profile-name { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.profile-bio { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.4; }
+.profile-stats { display: flex; justify-content: center; gap: 28px; margin-bottom: 16px; }
+.stat-item { text-align: center; }
+.stat-num { font-size: 18px; font-weight: 700; color: var(--text); }
+.stat-label { font-size: 10px; color: var(--muted); }
+
+.ig-link-btn {
+  width: 100%; padding: 12px; border-radius: 12px;
+  background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+  color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; border: none;
+  font-family: inherit; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+.xp-section { padding: 0 16px 20px; }
+.xp-level-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.xp-bar-bg { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+.xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 4px; width: 0%; transition: width 1s ease-out; }
+.xp-count { font-size: 11px; color: var(--gold); text-align: right; }
+
+/* ===== FOOTPRINT PROFILE ===== */
+.footprint-section {
+  margin: 0 16px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.fp-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px;
+}
+.fp-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.fp-subtitle { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.fp-body { padding: 0 16px 14px; }
+.fp-category { margin-bottom: 10px; }
+.fp-category-label { font-size: 10px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+.fp-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.fp-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(200,160,48,0.1); border: 1px solid rgba(200,160,48,0.25);
+  border-radius: 14px; padding: 4px 10px; font-size: 11px; color: var(--gold);
+}
+.fp-tag-count {
+  background: rgba(200,160,48,0.2); border-radius: 8px;
+  padding: 1px 5px; font-size: 9px; font-weight: 700;
+}
+.fp-tag.tokui {
+  background: rgba(58,122,208,0.1); border-color: rgba(58,122,208,0.25); color: var(--blue);
+}
+.fp-tag.tokui .fp-tag-count { background: rgba(58,122,208,0.2); }
+.fp-tag.kanshin {
+  background: rgba(112,64,192,0.1); border-color: rgba(112,64,192,0.25); color: var(--purple);
+}
+.fp-tag.kanshin .fp-tag-count { background: rgba(112,64,192,0.2); }
+.fp-divider { height: 1px; background: var(--border); margin: 10px 0; }
+.fp-issue-wrap {
+  background: rgba(42,154,96,0.08); border: 1px solid rgba(42,154,96,0.25);
+  border-radius: 12px; padding: 12px;
+}
+.fp-issue-label { font-size: 10px; color: var(--green); margin-bottom: 5px; font-weight: 600; }
+.fp-issue-text { font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 6px; }
+.fp-issue-cta { font-size: 11px; color: var(--green); cursor: pointer; }
+.fp-intro { font-size: 11px; color: var(--muted); padding: 0 16px 10px; line-height: 1.6; }
+.fp-heat { font-size: 8px; color: var(--gold); letter-spacing: 0.5px; opacity: 0.8; margin-left: 4px; }
+.fp-tag.tokui .fp-heat { color: var(--blue); }
+.fp-key-phrase {
+  font-size: 11px; color: var(--muted); font-style: italic;
+  border-left: 2px solid rgba(42,154,96,0.4); padding-left: 8px; margin: 6px 0 4px;
+  line-height: 1.5;
+}
+.fp-issue-reason { font-size: 10px; color: var(--muted); margin-bottom: 8px; }
+.fp-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 16px 0; line-height: 1.6; }
+.fp-expand-btn {
+  width: 100%; padding: 10px; background: none;
+  border: none; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--muted); cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+
+.nft-cards-scroll { overflow-x: scroll; display: flex; gap: 12px; padding: 0 16px; }
+.nft-cards-scroll::-webkit-scrollbar { display: none; }
+.nft-card { flex-shrink: 0; width: 200px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+.nft-card-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.nft-card-meta { font-size: 10px; color: var(--muted); margin-bottom: 10px; }
+.nft-card-days { display: inline-block; background: rgba(200,160,48,0.1); border: 1px solid rgba(200,160,48,0.3); border-radius: 8px; padding: 3px 8px; font-size: 10px; color: var(--gold); margin-bottom: 10px; }
+.nft-card-actions { display: flex; gap: 8px; }
+.nft-card-btn { flex: 1; padding: 7px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; text-align: center; }
+.nft-card-btn.use { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #000; }
+.nft-card-btn.transfer { background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+
+.profile-tabs { display: flex; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 20px 0 0; }
+.profile-tab { flex: 1; padding: 12px; text-align: center; font-size: 12px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+.profile-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+.profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.profile-grid-cell {
+  aspect-ratio: 1; overflow: hidden; cursor: pointer; position: relative; background: var(--card);
+  display: flex; align-items: center; justify-content: center;
+}
+.profile-grid-cell:active { opacity: 0.7; }
+.profile-grid-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.profile-grid-cell-fallback { font-size: 28px; }
+
+.nft-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.nft-list-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; gap: 12px; align-items: center; }
+.nft-list-icon { font-size: 28px; }
+.nft-list-info { flex: 1; }
+.nft-list-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.nft-list-meta { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.nft-list-thumb { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--card); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.nft-list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.lifelog { padding: 16px; }
+.lifelog-btn { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--gold); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 16px; }
+.lifelog-timeline { display: flex; flex-direction: column; gap: 0; }
+.timeline-item { display: flex; gap: 14px; position: relative; padding-bottom: 20px; }
+.timeline-item::before { content: ''; position: absolute; left: 23px; top: 36px; bottom: 0; width: 1px; background: var(--border); }
+.timeline-item:last-child::before { display: none; }
+.timeline-dot { width: 46px; height: 46px; border-radius: 10px; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; overflow: hidden; }
+.timeline-dot img { width: 100%; height: 100%; object-fit: cover; }
+.timeline-content { flex: 1; padding-top: 6px; }
+.timeline-title { font-size: 13px; color: var(--text); font-weight: 500; }
+.timeline-time { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* ===== MODALS ===== */
+.modal-overlay {
+  display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 500; border-radius: 54px; align-items: flex-end;
+}
+@media (max-width: 430px) { .modal-overlay { border-radius: 0; } }
+.modal-overlay.visible { display: flex; }
+.modal-sheet {
+  background: var(--card); border-radius: 24px 24px 0 0; width: 100%;
+  max-height: 80%; overflow-y: scroll; padding: 20px 20px 40px;
+  border-top: 1px solid var(--border);
+}
+.modal-sheet::-webkit-scrollbar { display: none; }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+.modal-title { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 12px; text-align: center; }
+.modal-close { float: right; font-size: 20px; color: var(--muted); cursor: pointer; margin-top: -4px; }
+
+/* post detail modal */
+.post-detail-wrap { }
+.post-detail-image-full { width: 100%; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; margin-bottom: 12px; background: var(--bg); }
+.post-detail-image-full img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.post-detail-image-fallback { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.post-detail-caption { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 10px; }
+.post-detail-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.post-detail-tag { font-size: 12px; color: var(--gold); }
+.post-detail-meta { font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; }
+
+/* human auth modal */
+.human-auth-icon { font-size: 48px; margin-bottom: 12px; text-align: center; }
+.human-auth-text { font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 16px; text-align: center; }
+.human-auth-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; text-align: center; }
+
+/* ig modal */
+.ig-modal-steps { background: var(--bg); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
+.ig-step { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.ig-step:last-child { border-bottom: none; }
+.ig-step-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(200,160,48,0.2); border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+.ig-step-text { font-size: 12px; color: var(--text); line-height: 1.5; }
+.ig-action-btns { display: flex; flex-direction: column; gap: 10px; }
+.ig-btn { width: 100%; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; font-family: inherit; text-align: center; }
+.ig-btn.primary { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); color: #fff; }
+.ig-btn.secondary { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+.ig-import-area { display: none; margin-top: 12px; }
+.ig-import-area.visible { display: block; }
+.ig-url-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--text); outline: none; font-family: inherit; margin-bottom: 8px; }
+.ig-url-input:focus { border-color: var(--gold); }
+.ig-import-btn { width: 100%; padding: 12px; border-radius: 10px; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #000; font-size: 13px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; }
+
+/* ===== TOAST ===== */
+.toast-container { position: absolute; top: 70px; left: 14px; right: 14px; z-index: 999; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.toast { background: #1e1e1e; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--text); opacity: 0; transform: translateY(-10px); transition: all 0.25s ease; pointer-events: auto; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-color: var(--green); background: rgba(42,154,96,0.15); }
+.toast.warning { border-color: var(--gold); background: rgba(200,160,48,0.12); }
+.toast.info { border-color: var(--blue); background: rgba(58,122,208,0.12); }
+
+/* ===== XP FLOAT ===== */
+.xp-float { position: absolute; bottom: 90px; right: 20px; font-size: 15px; font-weight: 700; color: var(--green); pointer-events: none; z-index: 999; opacity: 0; animation: floatUp 1.5s ease forwards; }
+@keyframes floatUp { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-60px)} }
+
+/* ===== CONCEPT STRIP ===== */
+.concept-strip {
+  display: flex; align-items: center; justify-content: center;
+  padding: 10px 14px 14px; gap: 4px;
+}
+.concept-step { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.concept-step-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(200,160,48,0.1); border: 1px solid rgba(200,160,48,0.25);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.concept-step-label { font-size: 9px; color: var(--muted); white-space: nowrap; }
+.concept-arrow { color: #333; font-size: 14px; margin-bottom: 14px; flex-shrink: 0; }
+
+/* ===== INVITE SCREEN ===== */
+.invite-list { padding: 8px 16px; display: flex; flex-direction: column; gap: 14px; }
+.invite-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px; position: relative; overflow: hidden;
+}
+.invite-badge {
+  position: absolute; top: 14px; right: 14px;
+  background: rgba(42,154,96,0.15); border: 1px solid rgba(42,154,96,0.35);
+  border-radius: 8px; padding: 3px 8px; font-size: 10px; color: var(--green); font-weight: 600;
+}
+.invite-card-top { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.invite-card-emoji { font-size: 30px; flex-shrink: 0; }
+.invite-card-title { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.4; padding-right: 40px; }
+.invite-match-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.invite-match-tag {
+  background: rgba(200,160,48,0.1); border: 1px solid rgba(200,160,48,0.25);
+  border-radius: 10px; padding: 3px 8px; font-size: 10px; color: var(--gold);
+}
+.invite-reason { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+.invite-accept-btn {
+  width: 100%; padding: 12px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--green), #50c080);
+  color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+  border: none; font-family: inherit; transition: opacity 0.15s;
+}
+.invite-accept-btn:active { opacity: 0.8; }
+
+/* ===== POST SUCCESS FOOTPRINT ===== */
+.success-footprint {
+  background: rgba(200,160,48,0.08); border: 1px solid rgba(200,160,48,0.2);
+  border-radius: 14px; padding: 14px 16px; width: 88%; text-align: left;
+}
+.success-fp-label { font-size: 10px; color: var(--muted); margin-bottom: 8px; }
+.success-fp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.success-fp-tag {
+  background: rgba(200,160,48,0.12); border: 1px solid rgba(200,160,48,0.3);
+  border-radius: 10px; padding: 4px 10px; font-size: 11px; color: var(--gold);
+}
+.success-fp-signal { font-size: 11px; margin-bottom: 4px; color: var(--gold); }
+.success-fp-heat { font-size: 10px; color: var(--muted); margin-top: 4px; }
+.card-footprint-hint { font-size: 11px; color: var(--muted); cursor: pointer; margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
+.card-footprint-hint:active { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="dynamic-island"></div>
+  <div class="status-bar">
+    <span class="status-time" id="clock">9:41</span>
+    <div class="status-icons"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
+  </div>
+
+  <div class="app">
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ===== HOME ===== -->
+    <div class="screen" id="screen-home">
+      <div class="screen-header">
+        <div class="logo">kuari</div>
+        <div class="header-tagline">投稿するだけで、あなたが分かる。</div>
+        <div class="header-icon-btn" onclick="showScreen('notif')">🔔</div>
+      </div>
+      <div class="scroll-area" style="padding-top:106px; padding-bottom:90px;">
+        <div class="stories-wrapper" id="storiesBar">
+          <div class="story-item" onclick="showScreen('post')">
+            <div class="story-avatar-wrap">
+              <div class="story-avatar" style="background:linear-gradient(135deg,#1a1a1a,#2a2a2a);">
+                <div style="text-align:center"><div style="font-size:18px;color:var(--gold)">＋</div><div style="font-size:9px;color:var(--gold)">投稿</div></div>
+              </div>
+            </div>
+            <span class="story-label">投稿する</span>
+          </div>
+          <div class="story-item" onclick="showHumanAuthModal()">
+            <div class="story-avatar-wrap unread"><div class="story-avatar">⛩️</div></div>
+            <span class="story-label">Yuki</span>
+          </div>
+          <div class="story-item" onclick="showHumanAuthModal()">
+            <div class="story-avatar-wrap unread"><div class="story-avatar">🍵</div></div>
+            <span class="story-label">Hana</span>
+          </div>
+          <div class="story-item" onclick="showHumanAuthModal()">
+            <div class="story-avatar-wrap unread"><div class="story-avatar">🪨</div></div>
+            <span class="story-label">Jo</span>
+          </div>
+          <div class="story-item" onclick="showHumanAuthModal()">
+            <div class="story-avatar-wrap"><div class="story-avatar">🌿</div></div>
+            <span class="story-label">Sora</span>
+          </div>
+          <div class="story-item" onclick="showHumanAuthModal()">
+            <div class="story-avatar-wrap unread"><div class="story-avatar">🎨</div></div>
+            <span class="story-label">Nami</span>
+          </div>
+        </div>
+        <div class="concept-strip">
+          <div class="concept-step"><div class="concept-step-icon">📝</div><div class="concept-step-label">投稿する</div></div>
+          <div class="concept-arrow">→</div>
+          <div class="concept-step"><div class="concept-step-icon">🤖</div><div class="concept-step-label">AI分析</div></div>
+          <div class="concept-arrow">→</div>
+          <div class="concept-step"><div class="concept-step-icon">🌱</div><div class="concept-step-label">足跡蓄積</div></div>
+          <div class="concept-arrow">→</div>
+          <div class="concept-step"><div class="concept-step-icon">🌏</div><div class="concept-step-label">招待</div></div>
+        </div>
+        <div class="feed" id="feedContainer"></div>
+      </div>
+    </div>
+
+    <!-- ===== INVITE ===== -->
+    <div class="screen" id="screen-explore">
+      <div class="screen-header" style="justify-content:space-between;">
+        <div>
+          <div style="font-size:17px;font-weight:800;color:var(--text);">あなたへの招待</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:1px;">足跡から見つかった、力になれる場所</div>
+        </div>
+        <div style="font-size:11px;color:var(--green);background:rgba(42,154,96,0.1);border:1px solid rgba(42,154,96,0.3);border-radius:8px;padding:4px 10px;">招待制</div>
+      </div>
+      <div class="scroll-area" style="padding-top:106px;padding-bottom:90px;">
+        <div class="invite-list" id="inviteList"></div>
+      </div>
+    </div>
+
+    <!-- ===== POST ===== -->
+    <div class="screen" id="screen-post">
+      <div class="screen-header">
+        <span class="post-close-btn" onclick="showScreen('home')">✕</span>
+        <span class="post-title">好きを投稿</span>
+        <span class="post-next-btn" id="postNextBtn">次へ →</span>
+      </div>
+      <div class="scroll-area">
+        <div class="post-form">
+
+          <!-- Photo picker -->
+          <div class="post-photo-wrap">
+            <div class="post-photo-area" id="postPhotoArea" onclick="openPhotoPicker()">
+              <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(this)">
+              <div id="photoPlaceholder">
+                <div class="photo-placeholder-icon">📷</div>
+                <div class="photo-placeholder-hint">写真を追加</div>
+                <div class="photo-placeholder-sub">タップしてカメラ/ライブラリから選択</div>
+              </div>
+              <img id="photoPreview" alt="">
+              <div class="photo-change-btn" id="photoChangeBtn" style="display:none" onclick="event.stopPropagation(); openPhotoPicker()">変更</div>
+            </div>
+            <!-- Filter strip (shown after photo selected) -->
+            <div class="filter-strip" id="filterStrip">
+              <div class="filter-opt active" data-filter="normal" onclick="selectFilter(this,'normal')">
+                <div class="filter-opt-thumb" id="ft-normal"><div class="filter-opt-thumb-fallback">🌸</div></div>
+                <span class="filter-opt-label">Normal</span>
+              </div>
+              <div class="filter-opt" data-filter="warm" onclick="selectFilter(this,'warm')">
+                <div class="filter-opt-thumb filter-warm" id="ft-warm"><div class="filter-opt-thumb-fallback">🌸</div></div>
+                <span class="filter-opt-label">Warm</span>
+              </div>
+              <div class="filter-opt" data-filter="cool" onclick="selectFilter(this,'cool')">
+                <div class="filter-opt-thumb filter-cool" id="ft-cool"><div class="filter-opt-thumb-fallback">🌸</div></div>
+                <span class="filter-opt-label">Cool</span>
+              </div>
+              <div class="filter-opt" data-filter="mono" onclick="selectFilter(this,'mono')">
+                <div class="filter-opt-thumb filter-mono" id="ft-mono"><div class="filter-opt-thumb-fallback">🌸</div></div>
+                <span class="filter-opt-label">Mono</span>
+              </div>
+              <div class="filter-opt" data-filter="wabi" onclick="selectFilter(this,'wabi')">
+                <div class="filter-opt-thumb filter-wabi" id="ft-wabi"><div class="filter-opt-thumb-fallback">🌸</div></div>
+                <span class="filter-opt-label">Wabi</span>
+              </div>
+              <div class="filter-opt" data-filter="vivid" onclick="selectFilter(this,'vivid')">
+                <div class="filter-opt-thumb filter-vivid" id="ft-vivid"><div class="filter-opt-thumb-fallback">🌸</div></div>
+                <span class="filter-opt-label">Vivid</span>
+              </div>
+              <div class="filter-opt" data-filter="fade" onclick="selectFilter(this,'fade')">
+                <div class="filter-opt-thumb filter-fade" id="ft-fade"><div class="filter-opt-thumb-fallback">🌸</div></div>
+                <span class="filter-opt-label">Fade</span>
+              </div>
+            </div>
+          </div>
+
+          <textarea class="post-textarea" id="postTextarea"
+            placeholder="今感じた好きを書いてみよう..."
+            oninput="onPostTextChange()"></textarea>
+
+          <div class="tag-suggestions">
+            <div class="tag-chip" onclick="addTag('#kuari東本町')">#kuari東本町</div>
+            <div class="tag-chip" onclick="addTag('#山陰')">#山陰</div>
+            <div class="tag-chip" onclick="addTag('#出雲')">#出雲</div>
+            <div class="tag-chip" onclick="addTag('#茶')">#茶</div>
+            <div class="tag-chip" onclick="addTag('#好き')">#好き</div>
+          </div>
+
+          <div class="ai-meter">
+            <div class="ai-meter-header">
+              <span class="ai-meter-title">🤖 AIポジティブ判定</span>
+              <span class="ai-meter-result" id="aiMeterResult">✅ ポジティブ</span>
+            </div>
+            <div class="meter-bar-bg"><div class="meter-bar-fill" id="aiMeterBar" style="width:50%"></div></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:5px;text-align:right" id="aiMeterScore">50%</div>
+          </div>
+
+          <div class="toggles">
+            <div class="toggle-row">
+              <span class="toggle-label">📱 Instagram に同時投稿</span>
+              <div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">🏅 NFT として記録する</span>
+              <div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+            </div>
+            <div class="toggle-row">
+              <span class="toggle-label">🌏 世界平和ゲームに参加</span>
+              <div class="toggle-switch" onclick="toggleSwitch(this)"><div class="toggle-knob"></div></div>
+            </div>
+          </div>
+
+          <div class="human-badge">🧬 人間認証済み ✅</div>
+          <button class="post-submit-btn" id="postSubmitBtn" onclick="submitPost()" disabled>投稿してNFT化する</button>
+        </div>
+      </div>
+
+      <!-- Success overlay -->
+      <div class="post-success" id="postSuccess">
+        <div class="success-sparks">✨</div>
+        <div class="success-nft-title">🌱 足跡に追加されました</div>
+        <div class="success-footprint" id="successFootprint"></div>
+        <div class="success-xp">+30pt 足跡が育ちました</div>
+        <div class="success-sub">AIが分析してプロフィールに反映します</div>
+        <button class="success-continue-btn" onclick="afterPostSuccess()">続ける</button>
+      </div>
+    </div>
+
+    <!-- ===== NOTIFICATIONS ===== -->
+    <div class="screen" id="screen-notif">
+      <div class="screen-header"><span class="notif-title">通知</span></div>
+      <div class="scroll-area">
+        <div class="notif-list">
+          <div class="notif-item">
+            <div class="notif-icon">🏅</div>
+            <div class="notif-content">
+              <div class="notif-text">あなたの「出雲大社 朝の参拝」投稿がNFT化されました！ Token #0084</div>
+              <div class="notif-time">2分前</div>
+              <span class="notif-action-btn" onclick="window.open('https://opensea.io','_blank')">OpenSeaで確認</span>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">🌏</div>
+            <div class="notif-content">
+              <div class="notif-text">+25pt 獲得！平和スコアが上がりました<br>現在のランク: 平和の旅人 Lv.3 ⭐⭐⭐</div>
+              <div class="notif-time">15分前</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">🧬</div>
+            <div class="notif-content">
+              <div class="notif-text">Hana_kuariさんがあなたを人間認証しました ✅</div>
+              <div class="notif-time">1時間前</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">❤️</div>
+            <div class="notif-content">
+              <div class="notif-text">3人があなたの投稿をいいねしました<br>「早朝6時の出雲大社...」</div>
+              <div class="notif-time">2時間前</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">🎁</div>
+            <div class="notif-content">
+              <div class="notif-text">kuari東本町 利用権まであと 45pt！<br>あと2〜3投稿で獲得できます 🏯</div>
+              <div class="notif-time">3時間前</div>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">📸</div>
+            <div class="notif-content">
+              <div class="notif-text">Instagramの投稿を検出しました<br>「#kuari東本町」タグ付き投稿 → kuariに同期</div>
+              <div class="notif-time">昨日</div>
+              <span class="notif-action-btn" onclick="showScreen('home')">確認する</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PROFILE ===== -->
+    <div class="screen" id="screen-profile">
+      <div class="screen-header" style="justify-content:space-between;">
+        <span class="notif-title">🌱 あなたの足跡</span>
+        <span style="font-size:20px;cursor:pointer" onclick="showToast('設定機能は近日公開予定です','info')">⚙️</span>
+      </div>
+      <div class="scroll-area">
+        <div class="profile-header-inner">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="profileAvatar">あ</div>
+            <div class="profile-verified-badge">🧬</div>
+          </div>
+          <div class="profile-name">@akubi.kuari</div>
+          <div class="profile-bio">平和の旅人 / 山陰在住 / kuari東本町オーナー</div>
+          <div class="profile-stats">
+            <div class="stat-item"><div class="stat-num">234</div><div class="stat-label">フォロワー</div></div>
+            <div class="stat-item"><div class="stat-num">89</div><div class="stat-label">フォロー</div></div>
+            <div class="stat-item"><div class="stat-num">Lv.3</div><div class="stat-label">足跡スコア</div></div>
+          </div>
+        </div>
+        <div class="profile-tabs">
+          <div class="profile-tab active" onclick="switchProfileTab(this,'tab-posts')">📷 投稿</div>
+          <div class="profile-tab" onclick="switchProfileTab(this,'tab-footprint')">🌱 足跡</div>
+        </div>
+        <div id="tab-posts" class="profile-grid" style="gap:2px;"></div>
+        <div id="tab-footprint" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ===== BOTTOM NAV ===== -->
+    <nav class="bottom-nav" id="bottomNav">
+      <div class="nav-item active" onclick="showScreen('home')" id="nav-home"><div class="nav-icon">🏠</div><div class="nav-label">ホーム</div></div>
+      <div class="nav-item" onclick="showScreen('explore')" id="nav-explore"><div class="nav-icon">🌏</div><div class="nav-label">招待</div></div>
+      <div class="nav-item" onclick="showScreen('post')" id="nav-post"><div class="nav-icon">➕</div><div class="nav-label">投稿</div></div>
+      <div class="nav-item" onclick="showScreen('notif')" id="nav-notif"><div class="nav-icon">🔔</div><div class="nav-label">通知</div><div class="nav-badge">3</div></div>
+      <div class="nav-item" onclick="showScreen('profile')" id="nav-profile"><div class="nav-icon">🌱</div><div class="nav-label">足跡</div></div>
+    </nav>
+  </div>
+
+  <!-- ===== MODALS ===== -->
+  <div class="modal-overlay" id="humanAuthModal" onclick="closeModal('humanAuthModal')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <span class="modal-close" onclick="closeModal('humanAuthModal')">✕</span>
+      <div class="modal-title">🧬 人間認証済み体験</div>
+      <div class="human-auth-icon">🧬</div>
+      <div class="human-auth-text">このストーリーはAIではなく<br>実際の人間による体験投稿です。<br>kuariの人間認証システムにより<br>リアルな体験であることが確認されています。</div>
+      <div class="human-auth-sub">認証日時: 2026.05.27 / Token: 0x7f3a...b1d2</div>
+      <div style="background:rgba(42,154,96,0.1);border:1px solid rgba(42,154,96,0.3);border-radius:12px;padding:12px;font-size:12px;color:var(--green);text-align:center;">
+        ✅ Proof of Humanity 認証済み<br>
+        <span style="color:var(--muted);">ブロックチェーンで永続的に記録されています</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="igModal" onclick="closeModal('igModal')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <span class="modal-close" onclick="closeModal('igModal')">✕</span>
+      <div class="modal-title">📷 Instagram 連携</div>
+      <div class="ig-modal-steps">
+        <div class="ig-step"><div class="ig-step-num">①</div><div class="ig-step-text">「#kuari東本町」タグを付けてInstagramに投稿</div></div>
+        <div class="ig-step"><div class="ig-step-num">②</div><div class="ig-step-text">kuariが自動検知してこのアプリに反映</div></div>
+        <div class="ig-step"><div class="ig-step-num">③</div><div class="ig-step-text">投稿がNFT化され平和スコアに加算</div></div>
+      </div>
+      <div class="ig-action-btns">
+        <button class="ig-btn primary" onclick="window.open('https://www.instagram.com/','_blank')">Instagramを開く</button>
+        <button class="ig-btn secondary" onclick="toggleImportArea()">デモ: 投稿を手動でインポート</button>
+      </div>
+      <div class="ig-import-area" id="igImportArea">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Instagram投稿URLを貼り付け:</div>
+        <input class="ig-url-input" id="igUrlInput" type="url" placeholder="https://www.instagram.com/p/...">
+        <button class="ig-import-btn" onclick="simulateInstagramImport()">インポート</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="postDetailModal" onclick="closeModal('postDetailModal')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <span class="modal-close" onclick="closeModal('postDetailModal')">✕</span>
+      <div class="post-detail-wrap" id="postDetailContent"></div>
+    </div>
+  </div>
+
+</div><!-- /.device -->
+
+<script>
+'use strict';
+
+// ================================
+// STATE
+// ================================
+const STORE = {
+  posts: 'kuari_posts_v2',
+  xp: 'kuari_xp',
+  likes: 'kuari_likes',
+  nfts: 'kuari_nfts'
+};
+
+const INITIAL_POSTS = [
+  {
+    id: 1, user: "Yuki_Shimane", avatar_emoji: "⛩️", avatar_img: null, verified: true,
+    time: "2時間前",
+    image_data: null, image_bg: "linear-gradient(135deg,#1a1020,#2a1a30,#1a1a20)",
+    image_emoji: "⛩️", image_text: "出雲大社 早朝参拝", filter: "normal",
+    caption: "早朝6時の出雲大社。誰もいない参道でお清め。この静けさが好き。魂が整う感じがする。",
+    tags: ["#kuari東本町","#出雲大社","#山陰","#朝活","#wabisabi"],
+    likes: 47, xp: 25, xp_label: "文化貢献", nft_id: "0x0084", source: "instagram", comments: 8
+  },
+  {
+    id: 2, user: "Hana_kuari", avatar_emoji: "🍵", avatar_img: null, verified: true,
+    time: "5時間前",
+    image_data: null, image_bg: "linear-gradient(135deg,#0a1a0a,#1a3010,#0a1808)",
+    image_emoji: "🍵", image_text: "明々庵 茶道体験", filter: "warm",
+    caption: "明々庵での抹茶体験。茶道の所作を学んで、心が整った。旅しながら日本文化を世界に伝えたい。",
+    tags: ["#茶道","#松江","#明々庵","#kuari","#日本文化"],
+    likes: 83, xp: 40, xp_label: "文化発信", nft_id: "0x0071", source: "instagram", comments: 14
+  },
+  {
+    id: 3, user: "traveler_jo", avatar_emoji: "🪨", avatar_img: null, verified: true,
+    time: "昨日",
+    image_data: null, image_bg: "linear-gradient(135deg,#0a1018,#102030,#0a1820)",
+    image_emoji: "🪨", image_text: "足立美術館 枯山水", filter: "mono",
+    caption: "日本一の庭園と言われる足立美術館。枯山水の美しさに言葉を失った。これが本物のwabi-sabi。",
+    tags: ["#足立美術館","#日本庭園","#wabisabi","#kuari","#山陰旅"],
+    likes: 124, xp: 30, xp_label: "美の共有", nft_id: "0x0055", source: "instagram", comments: 21
+  }
+];
+
+const EXPLORE_FALLBACK = [
+  { bg: "linear-gradient(135deg,#1a1020,#2a1a30)", emoji: "⛩️", score: 92 },
+  { bg: "linear-gradient(135deg,#0a1a0a,#1a3010)", emoji: "🍵", score: 88 },
+  { bg: "linear-gradient(135deg,#1a1008,#2a2010)", emoji: "🏯", score: 95 },
+  { bg: "linear-gradient(135deg,#180a1a,#281030)", emoji: "🎨", score: 84 },
+  { bg: "linear-gradient(135deg,#081a08,#102810)", emoji: "🌿", score: 79 },
+  { bg: "linear-gradient(135deg,#0a1018,#102030)", emoji: "🏖️", score: 76 },
+  { bg: "linear-gradient(135deg,#1a0a0a,#301010)", emoji: "🌅", score: 91 },
+  { bg: "linear-gradient(135deg,#080818,#101028)", emoji: "🌃", score: 85 },
+  { bg: "linear-gradient(135deg,#181008,#281808)", emoji: "🎋", score: 87 }
+];
+
+let selectedPhotoData = null;
+let selectedFilter = 'normal';
+let _doubleTapTimer = {};
+
+// ================================
+// STORAGE
+// ================================
+function loadPosts() {
+  try { const r = localStorage.getItem(STORE.posts); if (r) return JSON.parse(r); } catch(e) {}
+  return JSON.parse(JSON.stringify(INITIAL_POSTS));
+}
+function savePosts(p) { localStorage.setItem(STORE.posts, JSON.stringify(p)); }
+function loadXP() { const v = localStorage.getItem(STORE.xp); return v !== null ? parseInt(v) : 255; }
+function saveXP(v) { localStorage.setItem(STORE.xp, String(v)); }
+function loadLikes() {
+  try { const r = localStorage.getItem(STORE.likes); if (r) return new Set(JSON.parse(r)); } catch(e) {}
+  return new Set();
+}
+function saveLikes(s) { localStorage.setItem(STORE.likes, JSON.stringify([...s])); }
+function loadNFTs() {
+  try { const r = localStorage.getItem(STORE.nfts); if (r) return JSON.parse(r); } catch(e) {}
+  return [];
+}
+function saveNFTs(a) { localStorage.setItem(STORE.nfts, JSON.stringify(a)); }
+
+// ================================
+// XP
+// ================================
+function addXP(amount) {
+  let xp = loadXP() + amount;
+  saveXP(xp);
+  updateXPBar(xp);
+  const el = document.createElement('div');
+  el.className = 'xp-float';
+  el.textContent = '+' + amount + 'pt';
+  document.querySelector('.app').appendChild(el);
+  setTimeout(function() { el.remove(); }, 1600);
+}
+function updateXPBar(xp) {
+  const fill = document.getElementById('xpBarFill');
+  const cnt = document.getElementById('xpCount');
+  if (fill) fill.style.width = Math.min((xp / 300) * 100, 100) + '%';
+  if (cnt) cnt.textContent = xp + ' / 300 pt';
+}
+
+// ================================
+// TOAST
+// ================================
+function showToast(msg, type) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type || 'info');
+  t.textContent = msg;
+  c.appendChild(t);
+  requestAnimationFrame(function() { requestAnimationFrame(function() { t.classList.add('show'); }); });
+  setTimeout(function() { t.classList.remove('show'); setTimeout(function() { t.remove(); }, 300); }, 3000);
+}
+
+// ================================
+// SCREENS
+// ================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); s.style.display = ''; });
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  const s = document.getElementById('screen-' + name);
+  if (s) { s.style.display = 'flex'; requestAnimationFrame(function() { requestAnimationFrame(function() { s.classList.add('active'); }); }); }
+  const ni = document.getElementById('nav-' + name);
+  if (ni) ni.classList.add('active');
+  document.getElementById('bottomNav').style.display = (name === 'post') ? 'none' : '';
+  if (name === 'home') renderFeed();
+  if (name === 'explore') { var il = document.getElementById('inviteList'); if (il) il.innerHTML = ''; renderInvite(); }
+  if (name === 'profile') initProfile();
+  if (name === 'post') resetPostForm();
+}
+
+// ================================
+// FEED
+// ================================
+function renderFeed() {
+  const posts = loadPosts();
+  const likes = loadLikes();
+  const nfts = loadNFTs();
+  const c = document.getElementById('feedContainer');
+  if (!c) return;
+  c.innerHTML = '';
+  posts.forEach(function(post) {
+    c.appendChild(createFeedCard(post, likes.has(post.id), nfts.includes(post.id)));
+  });
+}
+
+function createFeedCard(post, liked, minted) {
+  var card = document.createElement('div');
+  card.className = 'feed-card';
+  card.dataset.id = post.id;
+
+  // Header
+  var header = document.createElement('div');
+  header.className = 'card-header';
+  var avatarEl = document.createElement('div');
+  avatarEl.className = 'card-avatar';
+  avatarEl.textContent = post.avatar_emoji || '👤';
+  header.innerHTML =
+    '<div class="card-user-info">' +
+      '<div class="card-username">' + escHtml(post.user) + (post.verified ? ' <span class="verified-badge">✓</span>' : '') + '</div>' +
+    '</div>' +
+    '<div class="card-menu" onclick="showPostMenu(' + post.id + ')">···</div>';
+  header.insertBefore(avatarEl, header.firstChild);
+
+  // Image
+  var imgWrapEl = document.createElement('div');
+  var heartOverlay = document.createElement('div');
+  heartOverlay.className = 'like-heart-overlay';
+  heartOverlay.textContent = '❤️';
+  if (post.image_data) {
+    imgWrapEl.className = 'card-image-wrap';
+    var img = document.createElement('img');
+    img.className = 'card-img filter-' + (post.filter || 'normal');
+    img.src = post.image_data; img.alt = '';
+    imgWrapEl.appendChild(img);
+    imgWrapEl.appendChild(heartOverlay);
+    imgWrapEl.addEventListener('click', function() { handleImageTap(post.id, card, heartOverlay); });
+  } else {
+    imgWrapEl.className = 'card-image-fallback';
+    imgWrapEl.style.cssText = 'background:' + (post.image_bg || '#111') + ';position:relative;';
+    imgWrapEl.innerHTML = '<div class="card-image-fallback-emoji">' + (post.image_emoji || '🌸') + '</div><div class="card-image-fallback-text">' + escHtml(post.image_text || '') + '</div>';
+    imgWrapEl.appendChild(heartOverlay);
+    imgWrapEl.addEventListener('click', function() { handleImageTap(post.id, card, heartOverlay); });
+  }
+
+  // Actions — Instagram style: ❤️ 💬 ↗️ / 🔖
+  var actionsEl = document.createElement('div');
+  actionsEl.className = 'card-actions';
+  actionsEl.innerHTML =
+    '<div class="action-btn' + (liked ? ' liked' : '') + '" data-like>' +
+      '<span class="action-icon">' + (liked ? '❤️' : '🤍') + '</span>' +
+    '</div>' +
+    '<div class="action-btn"><span class="action-icon">💬</span></div>' +
+    '<div class="action-btn"><span class="action-icon">↗️</span></div>' +
+    '<div class="spacer"></div>' +
+    '<div class="action-btn"><span class="action-icon">🔖</span></div>';
+
+  // Body
+  var bodyEl = document.createElement('div');
+  bodyEl.className = 'card-body';
+  var tagsHtml = post.tags.map(function(t) { return '<span class="card-tag">' + escHtml(t) + '</span>'; }).join('');
+  bodyEl.innerHTML =
+    '<div class="card-likes">いいね ' + post.likes + '件</div>' +
+    '<div class="card-caption"><span class="username">' + escHtml(post.user) + '</span> ' + escHtml(post.caption) + '</div>' +
+    '<div class="card-tags">' + tagsHtml + '</div>' +
+    '<div class="card-footprint-hint" data-peace onclick="onPeaceBadge(' + post.id + ',' + post.xp + ')">🌱 足跡に +' + post.xp + 'pt</div>';
+
+  card.appendChild(header);
+  card.appendChild(imgWrapEl);
+  card.appendChild(actionsEl);
+  card.appendChild(bodyEl);
+
+  actionsEl.querySelector('[data-like]').addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleLike(post.id, this, card);
+    // Update heart icon
+    var icon = this.querySelector('.action-icon');
+    if (this.classList.contains('liked')) icon.textContent = '❤️';
+    else icon.textContent = '🤍';
+  });
+
+  return card;
+}
+
+// Double-tap / single-tap on image
+function handleImageTap(postId, card, heartEl) {
+  if (_doubleTapTimer[postId]) {
+    clearTimeout(_doubleTapTimer[postId]);
+    delete _doubleTapTimer[postId];
+    // Double tap → like
+    heartEl.classList.remove('pop');
+    requestAnimationFrame(function() { requestAnimationFrame(function() { heartEl.classList.add('pop'); }); });
+    const likeBtn = card.querySelector('[data-like]');
+    const likes = loadLikes();
+    if (!likes.has(postId)) toggleLike(postId, likeBtn, card);
+    setTimeout(function() { heartEl.classList.remove('pop'); }, 750);
+  } else {
+    _doubleTapTimer[postId] = setTimeout(function() {
+      delete _doubleTapTimer[postId];
+      // Single tap → open detail
+      showPostDetail(postId);
+    }, 250);
+  }
+}
+
+function showPostMenu(postId) {
+  showToast('メニュー機能は近日公開予定です', 'info');
+}
+
+// ================================
+// LIKE
+// ================================
+function toggleLike(postId, btn, card) {
+  const likes = loadLikes();
+  const posts = loadPosts();
+  const idx = posts.findIndex(function(p) { return p.id === postId; });
+  if (idx === -1) return;
+  const icon = btn.querySelector('.action-icon');
+  const cnt = btn.querySelector('.action-count');
+  if (likes.has(postId)) {
+    likes.delete(postId); posts[idx].likes--;
+    btn.classList.remove('liked'); icon.style.color = '';
+  } else {
+    likes.add(postId); posts[idx].likes++;
+    btn.classList.add('liked'); icon.style.color = '#e03040';
+    icon.classList.add('pop');
+    setTimeout(function() { icon.classList.remove('pop'); }, 350);
+  }
+  if (cnt) cnt.textContent = posts[idx].likes;
+  const likesLabel = card.querySelector('.card-likes');
+  if (likesLabel) likesLabel.textContent = 'いいね ' + posts[idx].likes + '件';
+  saveLikes(likes); savePosts(posts);
+}
+
+// ================================
+// NFT
+// ================================
+function mintNFT(postId, btn) {
+  const nfts = loadNFTs();
+  if (nfts.includes(postId)) return;
+  btn.textContent = '⏳ ミント中...'; btn.disabled = true;
+  setTimeout(function() {
+    nfts.push(postId); saveNFTs(nfts);
+    btn.textContent = '✅ NFT済み'; btn.classList.add('minted'); btn.disabled = false;
+    showToast('✅ NFT ' + randNftId() + ' ミント完了！', 'success');
+    addXP(10);
+  }, 900);
+}
+
+// ================================
+// PEACE BADGE
+// ================================
+function onPeaceBadge(postId, xp) {
+  showToast('🌏 世界平和スコア +' + xp + 'pt 獲得！', 'success');
+  addXP(xp);
+}
+
+// ================================
+// EXPLORE
+// ================================
+function renderInvite() {
+  var list = document.getElementById('inviteList');
+  if (!list) return;
+  var fp = analyzeFootprint();
+  var allThemes = {};
+  Object.keys(fp.suki).forEach(function(k) { allThemes[k] = (allThemes[k]||0) + fp.suki[k]; });
+  Object.keys(fp.kanshin).forEach(function(k) { allThemes[k] = (allThemes[k]||0) + fp.kanshin[k]; });
+  var ranked = FP_SOCIAL_ISSUES.map(function(issue) {
+    return {
+      emoji: issue.emoji, text: issue.text, reason: issue.reason, themes: issue.themes,
+      score: issue.themes.reduce(function(s,t) { return s+(allThemes[t]||0); }, 0),
+      matchThemes: issue.themes.filter(function(t) { return allThemes[t] > 0; })
+    };
+  }).sort(function(a,b) { return b.score - a.score; });
+
+  ranked.forEach(function(issue) {
+    var card = document.createElement('div');
+    card.className = 'invite-card';
+    var tags = issue.matchThemes.length ? issue.matchThemes : ['kuariユーザー'];
+    var tagHtml = tags.map(function(t) { return '<span class="invite-match-tag">' + escHtml(t) + '</span>'; }).join('');
+    card.innerHTML =
+      '<div class="invite-badge">招待</div>' +
+      '<div class="invite-card-top">' +
+        '<div class="invite-card-emoji">' + issue.emoji + '</div>' +
+        '<div class="invite-card-title">' + escHtml(issue.text) + '</div>' +
+      '</div>' +
+      '<div class="invite-match-row">' + tagHtml + '</div>' +
+      '<div class="invite-reason">' + escHtml(issue.reason) + '</div>' +
+      '<button class="invite-accept-btn" onclick="showToast(\'参加申請を送りました 🌱\',\'success\')">参加を申し込む</button>';
+    list.appendChild(card);
+  });
+}
+
+function renderExplore() {
+  const grid = document.getElementById('exploreGrid');
+  if (!grid || grid.children.length > 0) return;
+  const posts = loadPosts();
+  const withPhoto = posts.filter(function(p) { return p.image_data; });
+
+  // Fill grid: user photos first, then fallbacks
+  let cells = [];
+  withPhoto.forEach(function(p) {
+    cells.push({ type: 'post', post: p, score: p.xp || 80 });
+  });
+  EXPLORE_FALLBACK.forEach(function(f) { cells.push({ type: 'fallback', data: f, score: f.score }); });
+  cells = cells.slice(0, 12);
+
+  cells.forEach(function(cell) {
+    const el = document.createElement('div');
+    el.className = 'explore-cell';
+    if (cell.type === 'post') {
+      el.style.background = '#0a0a0a';
+      const img = document.createElement('img');
+      img.src = cell.post.image_data;
+      img.className = 'filter-' + (cell.post.filter || 'normal');
+      img.alt = '';
+      el.appendChild(img);
+    } else {
+      el.style.background = cell.data.bg;
+      const fb = document.createElement('div');
+      fb.className = 'explore-cell-fallback';
+      fb.textContent = cell.data.emoji;
+      el.appendChild(fb);
+    }
+    const score = document.createElement('div');
+    score.className = 'explore-score';
+    score.textContent = cell.score + 'pt';
+    el.appendChild(score);
+    el.addEventListener('click', function() { showExploreDetail(cell); });
+    grid.appendChild(el);
+  });
+}
+
+function showExploreDetail(cell) {
+  const c = document.getElementById('postDetailContent');
+  if (cell.type === 'post') {
+    const p = cell.post;
+    c.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'post-detail-image-full';
+    const img = document.createElement('img');
+    img.src = p.image_data;
+    img.className = 'filter-' + (p.filter || 'normal');
+    img.alt = '';
+    wrap.appendChild(img);
+    c.appendChild(wrap);
+    c.innerHTML += '<div class="post-detail-caption">' + escHtml(p.caption) + '</div>' +
+      '<div class="post-detail-tags">' + p.tags.map(function(t) { return '<span class="post-detail-tag">' + escHtml(t) + '</span>'; }).join('') + '</div>' +
+      '<div class="post-detail-meta">平和スコア: ' + p.xp + 'pt | @' + escHtml(p.user) + ' | ' + escHtml(p.time) + '</div>';
+    c.insertBefore(wrap, c.firstChild);
+  } else {
+    const d = cell.data;
+    c.innerHTML = '<div class="post-detail-image-full"><div class="post-detail-image-fallback" style="background:' + d.bg + ';width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div style="font-size:56px">' + d.emoji + '</div></div></div>' +
+      '<div class="post-detail-caption">平和スコア ' + d.score + 'pt のスポットです。kuariコミュニティの体験投稿が集まっています。</div>' +
+      '<div class="post-detail-tags"><span class="post-detail-tag">#kuari東本町</span><span class="post-detail-tag">#山陰</span></div>';
+  }
+  showModal('postDetailModal');
+}
+
+function showPostDetail(postId) {
+  const posts = loadPosts();
+  const p = posts.find(function(x) { return x.id === postId; });
+  if (!p) return;
+  showExploreDetail({ type: 'post', post: p });
+}
+
+function selectChip(el) {
+  document.querySelectorAll('.chip').forEach(function(c) { c.classList.remove('active'); });
+  el.classList.add('active');
+}
+
+// ================================
+// PHOTO PICKER
+// ================================
+function openPhotoPicker() {
+  document.getElementById('photoInput').click();
+}
+
+function handlePhotoSelect(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  // Compress and set preview
+  compressImage(file, 900, 0.75).then(function(dataUrl) {
+    selectedPhotoData = dataUrl;
+    const preview = document.getElementById('photoPreview');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    preview.className = 'filter-' + selectedFilter;
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    document.getElementById('photoChangeBtn').style.display = 'flex';
+    document.getElementById('postPhotoArea').classList.add('has-photo');
+    // Show filter strip with thumbnails
+    showFilterStrip(dataUrl);
+    // Enable submit if text also OK
+    onPostTextChange();
+  });
+}
+
+function compressImage(file, maxPx, quality) {
+  return new Promise(function(resolve) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        let w = img.width, h = img.height;
+        const longer = Math.max(w, h);
+        if (longer > maxPx) {
+          const ratio = maxPx / longer;
+          w = Math.round(w * ratio); h = Math.round(h * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function showFilterStrip(dataUrl) {
+  const strip = document.getElementById('filterStrip');
+  strip.classList.add('visible');
+  // Update thumbnails to show selected photo
+  const filters = ['normal','warm','cool','mono','wabi','vivid','fade'];
+  filters.forEach(function(f) {
+    const thumb = document.getElementById('ft-' + f);
+    if (thumb) {
+      thumb.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = dataUrl; img.alt = '';
+      img.className = 'filter-' + f;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:8px;';
+      thumb.appendChild(img);
+    }
+  });
+}
+
+function selectFilter(el, filter) {
+  selectedFilter = filter;
+  document.querySelectorAll('.filter-opt').forEach(function(o) { o.classList.remove('active'); });
+  el.classList.add('active');
+  const preview = document.getElementById('photoPreview');
+  if (preview) preview.className = 'filter-' + filter;
+}
+
+// ================================
+// POST FORM
+// ================================
+function onPostTextChange() {
+  const text = document.getElementById('postTextarea').value;
+  const score = analyzePositivity(text);
+  updateAiMeter(score);
+  const ready = text.trim().length > 0;
+  document.getElementById('postNextBtn').classList.toggle('active', ready);
+  document.getElementById('postSubmitBtn').disabled = !ready;
+}
+
+function analyzePositivity(text) {
+  if (!text) return 50;
+  var s = 40;
+  s += Math.min(text.length * 0.5, 30);
+  ['嫌い','最悪','怒','憎','ひどい','むかつく','最低','嫌','苦しい','つらい'].forEach(function(w) { if (text.includes(w)) s -= 15; });
+  ['好き','素晴らしい','感謝','美しい','嬉しい','楽しい','幸せ','素敵','ありがとう','最高','綺麗','良い','いい','癒し','平和'].forEach(function(w) { if (text.includes(w)) s += 8; });
+  return Math.max(5, Math.min(99, Math.round(s)));
+}
+
+function updateAiMeter(score) {
+  const bar = document.getElementById('aiMeterBar');
+  const res = document.getElementById('aiMeterResult');
+  const sc = document.getElementById('aiMeterScore');
+  if (!bar) return;
+  bar.style.width = score + '%'; sc.textContent = score + '%';
+  const isLow = score < 60;
+  bar.classList.toggle('low', isLow); res.classList.toggle('low', isLow);
+  res.textContent = isLow ? '⚠️ 要修正' : '✅ ポジティブ';
+}
+
+function addTag(tag) {
+  const ta = document.getElementById('postTextarea');
+  if (!ta.value.includes(tag)) { ta.value += (ta.value ? ' ' : '') + tag; onPostTextChange(); }
+}
+
+function toggleSwitch(el) { el.classList.toggle('off'); }
+
+function resetPostForm() {
+  selectedPhotoData = null; selectedFilter = 'normal';
+  document.getElementById('postTextarea').value = '';
+  document.getElementById('postNextBtn').classList.remove('active');
+  document.getElementById('postSubmitBtn').disabled = true;
+  document.getElementById('postSuccess').classList.remove('visible');
+  updateAiMeter(50);
+  const preview = document.getElementById('photoPreview');
+  preview.src = ''; preview.style.display = 'none'; preview.className = '';
+  document.getElementById('photoPlaceholder').style.display = '';
+  document.getElementById('photoChangeBtn').style.display = 'none';
+  document.getElementById('postPhotoArea').classList.remove('has-photo');
+  document.getElementById('filterStrip').classList.remove('visible');
+  document.getElementById('photoInput').value = '';
+  document.querySelectorAll('.filter-opt').forEach(function(o) { o.classList.toggle('active', o.dataset.filter === 'normal'); });
+}
+
+// ================================
+// SUBMIT
+// ================================
+function submitPost() {
+  const text = document.getElementById('postTextarea').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('postSubmitBtn');
+  btn.disabled = true;
+  const steps = ['⏳ AIポジティブ判定中...','📡 Instagramに投稿中...','⛓ NFTミント中... Optimism'];
+  var i = 0;
+  function nextStep() {
+    btn.textContent = steps[i++];
+    if (i < steps.length) setTimeout(nextStep, 500); else setTimeout(finishPost, 1000);
+  }
+  nextStep();
+
+  function finishPost() {
+    // 足跡シグナル抽出して成功画面に表示
+    var sig = extractPostSignals({ caption: text, tags: ['#kuari東本町','#山陰'] });
+    var fpEl = document.getElementById('successFootprint');
+    if (fpEl) {
+      var themes = sig.extracted_themes.length ? sig.extracted_themes : ['体験投稿'];
+      var tagsHtml = themes.map(function(t) { return '<span class="success-fp-tag">📍 ' + escHtml(t) + '</span>'; }).join('');
+      var signalHtml = '';
+      if (sig.classification.is_like) signalHtml += '<div class="success-fp-signal">💛 好きなこと として記録</div>';
+      if (sig.classification.is_expert) signalHtml += '<div class="success-fp-signal" style="color:var(--blue)">💙 得意なこと として記録</div>';
+      fpEl.innerHTML =
+        '<div class="success-fp-label">🤖 AIが抽出したシグナル</div>' +
+        '<div class="success-fp-tags">' + tagsHtml + '</div>' +
+        signalHtml +
+        '<div class="success-fp-heat">熱量 ' + heatDots(sig.metrics.heat_level) + ' ' + sig.metrics.heat_level + '</div>';
+    }
+
+    var nftId = randNftId();
+    var posts = loadPosts();
+    var newPost = {
+      id: Date.now(), user: "akubi.kuari",
+      avatar_emoji: "あ", avatar_img: null, verified: true, time: "たった今",
+      image_data: selectedPhotoData,
+      image_bg: "linear-gradient(135deg,#1a1020,#2a2030)",
+      image_emoji: "🌸", image_text: text.slice(0, 15) + (text.length > 15 ? '...' : ''),
+      filter: selectedFilter,
+      caption: text, tags: ["#kuari東本町","#山陰"],
+      likes: 0, xp: 30, xp_label: "体験投稿", nft_id: nftId, source: "kuari", comments: 0
+    };
+    posts.unshift(newPost); savePosts(posts);
+    var nfts = loadNFTs(); nfts.push(newPost.id); saveNFTs(nfts);
+    addXP(30);
+    document.getElementById('postSuccess').classList.add('visible');
+  }
+}
+
+function afterPostSuccess() {
+  document.getElementById('postSuccess').classList.remove('visible');
+  showScreen('home');
+}
+
+// ================================
+// PROFILE
+// ================================
+function initProfile() {
+  const posts = loadPosts();
+  const grid = document.getElementById('tab-posts');
+  grid.innerHTML = '';
+  posts.forEach(function(post) {
+    const cell = document.createElement('div');
+    cell.className = 'profile-grid-cell';
+    if (post.image_data) {
+      const img = document.createElement('img');
+      img.src = post.image_data;
+      img.className = 'filter-' + (post.filter || 'normal');
+      img.alt = '';
+      cell.appendChild(img);
+    } else {
+      cell.style.background = post.image_bg || '#111';
+      const fb = document.createElement('div');
+      fb.className = 'profile-grid-cell-fallback';
+      fb.textContent = post.image_emoji || '🌸';
+      cell.appendChild(fb);
+    }
+    cell.addEventListener('click', function() { showPostDetail(post.id); });
+    grid.appendChild(cell);
+  });
+
+}
+
+function switchProfileTab(tab, targetId) {
+  document.querySelectorAll('.profile-tab').forEach(function(t) { t.classList.remove('active'); });
+  tab.classList.add('active');
+  ['tab-posts','tab-footprint'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  var target = document.getElementById(targetId);
+  if (target) { target.style.display = ''; }
+  if (targetId === 'tab-footprint') {
+    var fp = document.getElementById('tab-footprint');
+    if (fp && !fp.querySelector('.footprint-section')) {
+      var div = document.createElement('div');
+      div.id = 'footprint-profile';
+      div.className = 'footprint-section';
+      fp.appendChild(div);
+      renderFootprintProfile();
+    }
+  }
+}
+
+function showLifelog() {
+  const tl = document.getElementById('lifelogTimeline');
+  if (tl.innerHTML) { tl.innerHTML = ''; return; }
+  const posts = loadPosts();
+  posts.forEach(function(p) {
+    const item = document.createElement('div');
+    item.className = 'timeline-item';
+    const dot = document.createElement('div');
+    dot.className = 'timeline-dot';
+    if (p.image_data) {
+      const img = document.createElement('img');
+      img.src = p.image_data; img.alt = '';
+      img.className = 'filter-' + (p.filter || 'normal');
+      dot.appendChild(img);
+    } else {
+      dot.textContent = p.image_emoji || '🌸';
+    }
+    const content = document.createElement('div');
+    content.className = 'timeline-content';
+    content.innerHTML = '<div class="timeline-title">' + escHtml(p.image_text) + '</div><div class="timeline-time">' + escHtml(p.time) + '</div>';
+    item.appendChild(dot); item.appendChild(content);
+    tl.appendChild(item);
+  });
+}
+
+// ================================
+// INSTAGRAM IMPORT (simulation)
+// ================================
+function simulateInstagramImport() {
+  const url = document.getElementById('igUrlInput').value.trim();
+  if (!url) { showToast('URLを入力してください', 'warning'); return; }
+  const emojis = ['🌸','🗻','🍜','🎋','🏮','🌊','🏔️','🌺'];
+  const caps = ['Instagramからインポートされた素敵な体験。山陰の自然が美しかった。','インポート投稿。日本の伝統文化に触れる貴重な時間でした。','旅の思い出をkuariで記録。この景色は一生忘れられない。'];
+  const bgs = ["linear-gradient(135deg,#1a1030,#2a1a40)","linear-gradient(135deg,#0a1820,#102030)","linear-gradient(135deg,#081808,#102010)"];
+  const ri = Math.floor(Math.random() * emojis.length);
+  const nftId = randNftId();
+  const posts = loadPosts();
+  posts.unshift({
+    id: Date.now(), user: "ig_import", avatar_emoji: emojis[ri], avatar_img: null,
+    verified: false, time: "たった今", image_data: null,
+    image_bg: bgs[ri % bgs.length], image_emoji: emojis[ri], image_text: "Instagram投稿",
+    filter: "normal",
+    caption: caps[Math.floor(Math.random() * caps.length)],
+    tags: ["#kuari東本町","#instagram","#山陰"],
+    likes: Math.floor(Math.random() * 50) + 5, xp: 20, xp_label: "Instagram連携",
+    nft_id: nftId, source: "instagram", comments: Math.floor(Math.random() * 10)
+  });
+  savePosts(posts);
+  closeModal('igModal');
+  showToast('✅ Instagramから1件インポートしました！', 'success');
+  addXP(20);
+  document.getElementById('igUrlInput').value = '';
+  document.getElementById('igImportArea').classList.remove('visible');
+  if (document.getElementById('screen-home').classList.contains('active')) renderFeed();
+}
+
+function toggleImportArea() { document.getElementById('igImportArea').classList.toggle('visible'); }
+
+// ================================
+// MODALS
+// ================================
+function showModal(id) { document.getElementById(id).classList.add('visible'); }
+function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
+function showHumanAuthModal() { showModal('humanAuthModal'); }
+function showIgModal() { showModal('igModal'); }
+
+// ================================
+// UTILS
+// ================================
+function randNftId() { return '0x' + String(Math.floor(Math.random() * 9999)).padStart(4, '0'); }
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ================================
+// FOOTPRINT PROFILE  ─ 足跡エンジン（ルールベースAIシミュレーション）
+// ================================
+const FP_THEMES = {
+  '茶': ['茶','抹茶','茶道','お茶','明々庵'],
+  '自然': ['自然','緑','山','川','海','庭','森','庭園'],
+  '歴史': ['歴史','城','神社','寺','参拝','出雲','大社','仏閣','参道'],
+  'アート': ['アート','美術','絵','陶芸','工芸','美術館'],
+  '旅': ['旅','旅行','観光','山陰','島根','kuari'],
+  'wabi-sabi': ['wabi','wabisabi','枯山水','侘び'],
+  '地域': ['地域','松江','山陰','コミュニティ','地元'],
+  '文化': ['文化','日本文化','伝え','継承','日本','和文化']
+};
+
+const FP_LIKE_WORDS = ['好き','楽しい','楽しさ','また行きたい','嬉しい','幸せ','最高','素敵','綺麗','美しい','美しさ','大好き','癒し','心地よい','整った','感動','感謝','ありがとう'];
+const FP_EXPERT_WORDS = ['やり方','ポイント','方法','コツ','所作','学んで','学んだ','実践','教わった','手順','技法'];
+const FP_KANSHIN_MAP = {
+  '地域づくり': ['地域','松江','山陰','コミュニティ','地元'],
+  '平和': ['平和','世界平和','SDGs'],
+  '教育': ['教育','次世代','学び','学ぶ'],
+  '文化継承': ['文化','伝え','継承','伝統'],
+  '国際交流': ['国際','交流','世界','グローバル']
+};
+
+const FP_SOCIAL_ISSUES = [
+  { themes: ['茶','地域'], text: '地域の茶文化を次世代に伝えるプロジェクト', emoji: '🍵',
+    reason: '茶文化への関心と地域づくりへの思いから' },
+  { themes: ['自然','旅'], text: '自然体験を通じた国際交流プログラム', emoji: '🌿',
+    reason: '旅と自然へのあなたの感性が活かせます' },
+  { themes: ['歴史','アート'], text: '地域文化のデジタルアーカイブ活動', emoji: '🏯',
+    reason: '歴史とアートへの深い眼差しが力になります' },
+  { themes: ['旅','文化'], text: '山陰の魅力を世界に伝える体験ガイド育成', emoji: '✈️',
+    reason: '旅と文化の発信者としての視点から' },
+  { themes: ['地域','平和'], text: '地域コミュニティによる平和文化発信活動', emoji: '🌏',
+    reason: '地域づくりと平和への関心が重なっています' }
+];
+
+// 投稿1件を構造化JSONで分析（足跡エンジン本体）
+function extractPostSignals(post) {
+  var text = (post.caption || '') + ' ' + (post.tags || []).join(' ');
+
+  // extracted_themes: 最大3テーマ
+  var themes = [];
+  Object.keys(FP_THEMES).forEach(function(theme) {
+    if (FP_THEMES[theme].some(function(kw) { return text.includes(kw); })) themes.push(theme);
+  });
+
+  // is_like: 感情語があれば true
+  var is_like = FP_LIKE_WORDS.some(function(w) { return text.includes(w); });
+
+  // is_expert: 解説語があれば true
+  var is_expert = FP_EXPERT_WORDS.some(function(w) { return text.includes(w); });
+
+  // heat_level: 1.0 〜 5.0（文章量・感情語数・得意語から算出）
+  var heat = 2.0;
+  heat += Math.min((post.caption || '').length / 40, 1.5);
+  heat += FP_LIKE_WORDS.filter(function(w) { return text.includes(w); }).length * 0.4;
+  if (is_expert) heat += 0.5;
+  heat = Math.max(1.0, Math.min(5.0, Math.round(heat * 10) / 10));
+
+  // key_phrases: キャプションから特徴的なフレーズ2件
+  var key_phrases = [];
+  (post.caption || '').split(/[。！？]/).forEach(function(s) {
+    var t = s.trim();
+    if (t.length >= 8 && t.length <= 28 && key_phrases.length < 2) key_phrases.push(t);
+  });
+
+  return {
+    extracted_themes: themes.slice(0, 3),
+    classification: { is_like: is_like, is_expert: is_expert },
+    metrics: { heat_level: heat, key_phrases: key_phrases }
+  };
+}
+
+function analyzeFootprint() {
+  var posts = loadPosts();
+  var sukiMap = {}, sukiHeat = {}, tokuiMap = {}, tokuiHeat = {}, kanshinMap = {};
+  var allPhrases = [];
+
+  posts.forEach(function(post) {
+    var sig = extractPostSignals(post);
+    sig.extracted_themes.forEach(function(theme) {
+      // 好き: is_like or フォールバック（投稿=関心の表明）
+      if (sig.classification.is_like || (!sig.classification.is_expert)) {
+        sukiMap[theme] = (sukiMap[theme] || 0) + (sig.classification.is_like ? 1 : 0.5);
+        sukiHeat[theme] = Math.max(sukiHeat[theme] || 0, sig.metrics.heat_level);
+      }
+      // 得意: is_expert
+      if (sig.classification.is_expert) {
+        tokuiMap[theme] = (tokuiMap[theme] || 0) + 1;
+        tokuiHeat[theme] = Math.max(tokuiHeat[theme] || 0, sig.metrics.heat_level);
+      }
+    });
+    var text = (post.caption || '') + ' ' + (post.tags || []).join(' ');
+    Object.keys(FP_KANSHIN_MAP).forEach(function(cat) {
+      if (FP_KANSHIN_MAP[cat].some(function(kw) { return text.includes(kw); })) {
+        kanshinMap[cat] = (kanshinMap[cat] || 0) + 1;
+      }
+    });
+    sig.metrics.key_phrases.forEach(function(p) { allPhrases.push(p); });
+  });
+
+  return {
+    suki: sukiMap, sukiHeat: sukiHeat,
+    tokui: tokuiMap, tokuiHeat: tokuiHeat,
+    kanshin: kanshinMap, phrases: allPhrases, total: posts.length
+  };
+}
+
+function getSocialIssueMatch(fp) {
+  var allThemes = {};
+  Object.keys(fp.suki).forEach(function(k) { allThemes[k] = (allThemes[k] || 0) + fp.suki[k]; });
+  Object.keys(fp.kanshin).forEach(function(k) { allThemes[k] = (allThemes[k] || 0) + fp.kanshin[k]; });
+  var best = null, bestScore = 0;
+  FP_SOCIAL_ISSUES.forEach(function(issue) {
+    var score = issue.themes.reduce(function(s, t) { return s + (allThemes[t] || 0); }, 0);
+    if (score > bestScore) { bestScore = score; best = issue; }
+  });
+  return best;
+}
+
+// 熱量を●○で可視化（例: heat=3.3 → ●●●○○）
+function heatDots(heat) {
+  var full = Math.min(5, Math.round(heat));
+  var s = '';
+  for (var i = 1; i <= 5; i++) s += i <= full ? '●' : '○';
+  return s;
+}
+
+function renderFootprintProfile() {
+  var section = document.getElementById('footprint-profile');
+  if (!section) return;
+  var fp = analyzeFootprint();
+  var sukiList = Object.keys(fp.suki).sort(function(a,b) { return fp.suki[b]-fp.suki[a]; }).slice(0,5);
+  var tokuiList = Object.keys(fp.tokui).sort(function(a,b) { return fp.tokui[b]-fp.tokui[a]; }).slice(0,3);
+  var kanshinList = Object.keys(fp.kanshin).sort(function(a,b) { return fp.kanshin[b]-fp.kanshin[a]; }).slice(0,4);
+  var hasAny = sukiList.length + tokuiList.length + kanshinList.length > 0;
+
+  if (!hasAny) {
+    section.innerHTML =
+      '<div class="fp-header"><div><div class="fp-title">🤖 足跡プロフィール</div><div class="fp-subtitle">投稿から自動生成</div></div></div>' +
+      '<div class="fp-body"><div class="fp-empty">まだ投稿がありません。<br>好きな体験を投稿してみましょう！</div></div>';
+    return;
+  }
+
+  var html =
+    '<div class="fp-header"><div>' +
+      '<div class="fp-title">🤖 足跡プロフィール</div>' +
+      '<div class="fp-subtitle">投稿 ' + fp.total + ' 件をAIが解析</div>' +
+    '</div></div>' +
+    '<div class="fp-intro">あなたの投稿パターンから、好きなこと・得意なこと・気になっていることを抽出しました。</div>' +
+    '<div class="fp-body">';
+
+  if (sukiList.length) {
+    html += '<div class="fp-category"><div class="fp-category-label">💛 好きなこと</div><div class="fp-tags">';
+    sukiList.forEach(function(t) {
+      html += '<span class="fp-tag">' + escHtml(t) +
+        '<span class="fp-heat">' + heatDots(fp.sukiHeat[t] || 1) + '</span></span>';
+    });
+    html += '</div></div>';
+  }
+  if (tokuiList.length) {
+    html += '<div class="fp-category"><div class="fp-category-label">💙 得意なこと</div><div class="fp-tags">';
+    tokuiList.forEach(function(t) {
+      html += '<span class="fp-tag tokui">' + escHtml(t) +
+        '<span class="fp-heat">' + heatDots(fp.tokuiHeat[t] || 1) + '</span></span>';
+    });
+    html += '</div></div>';
+  }
+  if (kanshinList.length) {
+    html += '<div class="fp-category"><div class="fp-category-label">💜 気になっていること</div><div class="fp-tags">';
+    kanshinList.forEach(function(t) {
+      html += '<span class="fp-tag kanshin">' + escHtml(t) +
+        '<span class="fp-tag-count">×' + fp.kanshin[t] + '</span></span>';
+    });
+    html += '</div></div>';
+  }
+
+  var issue = getSocialIssueMatch(fp);
+  if (issue) {
+    var phrase = fp.phrases.length ? fp.phrases[0] : '';
+    html += '<div class="fp-divider"></div>' +
+      '<div class="fp-issue-wrap">' +
+        '<div class="fp-issue-label">💡 こんなプロジェクトに貢献できるかも</div>' +
+        '<div class="fp-issue-text">' + issue.emoji + ' ' + escHtml(issue.text) + '</div>' +
+        (phrase ? '<div class="fp-key-phrase">「' + escHtml(phrase) + '」などの投稿から</div>' : '') +
+        '<div class="fp-issue-reason">' + escHtml(issue.reason) + '</div>' +
+        '<div class="fp-issue-cta" onclick="showToast(\'プロジェクト詳細は近日公開予定です\',\'info\')">→ 詳しく見る</div>' +
+      '</div>';
+  }
+
+  html += '</div><button class="fp-expand-btn" onclick="showToast(\'プロジェクト一覧は近日公開予定です\',\'info\')">▾ もっと見る</button>';
+  section.innerHTML = html;
+}
+
+// ================================
+// CLOCK
+// ================================
+function updateClock() {
+  var now = new Date();
+  var el = document.getElementById('clock');
+  if (el) el.textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+}
+
+// ================================
+// INIT
+// ================================
+(function init() {
+  updateClock(); setInterval(updateClock, 10000);
+  if (!localStorage.getItem(STORE.posts)) savePosts(INITIAL_POSTS);
+  showScreen('home');
+})();
+</script>
+</body>
+</html>
