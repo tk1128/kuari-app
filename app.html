@@ -439,6 +439,14 @@ body {
 .success-img-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 50px; }
 .success-xp { font-size: 18px; color: var(--green); font-weight: 700; }
 .success-sub { font-size: 13px; color: var(--muted); }
+.success-stay-btn {
+  width: 85%; padding: 15px; border-radius: 16px;
+  background: linear-gradient(135deg, #8B5E00, #c89820);
+  color: #fff; font-size: 15px; font-weight: 700;
+  cursor: pointer; border: none; font-family: inherit;
+  box-shadow: 0 4px 20px rgba(200,160,48,0.3);
+  display: none;
+}
 .success-continue-btn {
   margin-top: 8px; padding: 14px 40px; border-radius: 16px;
   background: linear-gradient(135deg, var(--gold), var(--gold2));
@@ -1049,7 +1057,8 @@ body {
         <div class="success-nft-title">🌱 足跡に追加されました</div>
         <div class="success-footprint" id="successFootprint"></div>
         <div class="success-xp">+30pt 足跡が育ちました</div>
-        <div class="success-sub">AIが分析してプロフィールに反映します</div>
+        <div class="success-sub" id="successSub">AIが分析してプロフィールに反映します</div>
+        <button class="success-stay-btn" id="successStayBtn" onclick="goToStayFromSuccess()">🏯 kuari東本町を予約する</button>
         <button class="success-continue-btn" onclick="afterPostSuccess()">続ける</button>
       </div>
     </div>
@@ -1222,16 +1231,11 @@ const STORE = {
   xp: 'kuari_xp',
   likes: 'kuari_likes',
   nfts: 'kuari_nfts',
-  passPosts: 'kuari_pass_posts',
-  hasPass: 'kuari_has_pass'
+  posted: 'kuari_has_posted'
 };
 
-const PASS_THRESHOLD = 3;
-
-function loadPassPosts() { return parseInt(localStorage.getItem(STORE.passPosts) || '0'); }
-function savePassPosts(n) { localStorage.setItem(STORE.passPosts, String(n)); }
-function hasPass() { return localStorage.getItem(STORE.hasPass) === '1'; }
-function earnPass() { localStorage.setItem(STORE.hasPass, '1'); }
+function hasPosted() { return localStorage.getItem(STORE.posted) === '1'; }
+function markPosted() { localStorage.setItem(STORE.posted, '1'); }
 
 const INITIAL_POSTS = [
   {
@@ -1370,28 +1374,24 @@ function renderFeed() {
 // STAY FEATURE
 // ================================
 function createStayBannerCard() {
-  var passCount = loadPassPosts();
-  var pass = hasPass();
-  var pct = Math.min(100, Math.round((passCount / PASS_THRESHOLD) * 100));
+  var posted = hasPosted();
   var el = document.createElement('div');
   el.className = 'stay-banner-card';
   el.innerHTML =
     '<div class="stay-banner-visual">' +
       '<span>🏯</span>' +
       '<div class="stay-banner-vlabel">kuari東本町 · 松江市</div>' +
-      (pass
-        ? '<div class="stay-banner-vbadge earned">🏅 パス取得済み</div>'
-        : '<div class="stay-banner-vbadge">空室あり</div>') +
+      (posted
+        ? '<div class="stay-banner-vbadge earned">✅ 予約できます</div>'
+        : '<div class="stay-banner-vbadge">📸 投稿して予約</div>') +
     '</div>' +
     '<div class="stay-banner-body">' +
       '<div class="stay-banner-title">kuari東本町に宿泊する</div>' +
-      '<div class="stay-banner-desc">ポジティブ投稿でパスを獲得し、スケジュール調整にアクセスしよう。</div>' +
-      (pass
-        ? '<div class="stay-pass-earned-row">✅ 宿泊パス取得済み！スケジュールを確認できます</div>'
-        : '<div class="stay-progress-row"><span class="stay-progress-label">🌱 宿泊パスまで</span><span class="stay-progress-count">' + passCount + ' / ' + PASS_THRESHOLD + ' 投稿</span></div>' +
-          '<div class="stay-progress-bar"><div class="stay-progress-fill" style="width:' + pct + '%"></div></div>') +
+      (posted
+        ? '<div class="stay-banner-desc" style="color:rgba(80,200,130,0.85);font-weight:600;">✅ 投稿済み！日程と部屋を選んで予約できます</div>'
+        : '<div class="stay-banner-desc">📸 写真を1枚投稿すると、kuari東本町の宿泊予約ができるようになります</div>') +
       '<button class="stay-banner-btn">' +
-        (pass ? 'スケジュールを調整する →' : 'ポジティブ投稿してパスを獲得する →') +
+        (posted ? '🏯 スケジュールを確認して予約する →' : '📷 写真を投稿して予約する →') +
       '</button>' +
     '</div>';
   el.addEventListener('click', showStayModal);
@@ -1401,26 +1401,22 @@ function createStayBannerCard() {
 function showStayModal() {
   var c = document.getElementById('stayModalContent');
   if (!c) return;
-  var pass = hasPass();
-  var passCount = loadPassPosts();
-  if (!pass) {
-    var pct = Math.min(100, Math.round((passCount / PASS_THRESHOLD) * 100));
+  if (!hasPosted()) {
     c.innerHTML =
       '<div class="stay-inn-visual">🏯</div>' +
-      '<div class="stay-lock-box">' +
-        '<div class="stay-lock-icon">🔒</div>' +
-        '<div class="stay-lock-title">宿泊パスを獲得しよう</div>' +
-        '<div class="stay-lock-desc">AIスコア60%以上のポジティブ投稿を' + PASS_THRESHOLD + '件するとkuari東本町のスケジュール調整にアクセスできます。</div>' +
-        '<div class="stay-lock-bar"><div class="stay-lock-fill" style="width:' + pct + '%"></div></div>' +
-        '<div class="stay-lock-sub">' + passCount + ' / ' + PASS_THRESHOLD + ' 件完了</div>' +
+      '<div style="text-align:center;padding:0 4px 16px;">' +
+        '<div style="font-size:36px;margin-bottom:10px;">📸</div>' +
+        '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:10px;">写真を投稿すると予約できます</div>' +
+        '<div style="font-size:13px;color:var(--muted);line-height:1.8;">' +
+          'kuari東本町では、<br>' +
+          '<strong style="color:var(--text)">実際に来て体験した人だけ</strong>が<br>' +
+          '次回の宿泊を予約できます。<br><br>' +
+          '📸 写真を1枚投稿する<br>' +
+          '↓<br>' +
+          '🏯 kuari東本町を予約できる' +
+        '</div>' +
       '</div>' +
-      '<div class="stay-how-list">' +
-        '📸 ポジティブな体験を投稿する<br>' +
-        '🌱 足跡が育ち宿泊パスを獲得<br>' +
-        '🏯 kuari東本町スケジュールにアクセス<br>' +
-        '🏅 宿泊NFTで体験を永続記録' +
-      '</div>' +
-      '<button class="stay-post-cta" onclick="postFromStay()">🌱 ポジティブ投稿して宿泊パスを獲得する</button>';
+      '<button class="stay-post-cta" onclick="postFromStay()">📷 写真を投稿して予約する</button>';
   } else {
     c.innerHTML = buildScheduleHTML();
   }
@@ -1498,6 +1494,12 @@ function postFromStay() {
 function onPassEarnedTap() {
   document.getElementById('passEarnedOverlay').classList.remove('visible');
   showStayModal();
+}
+
+function goToStayFromSuccess() {
+  document.getElementById('postSuccess').classList.remove('visible');
+  showScreen('home');
+  setTimeout(showStayModal, 300);
 }
 
 function createFeedCard(post, liked, minted) {
@@ -1887,6 +1889,10 @@ function resetPostForm() {
   document.getElementById('postNextBtn').classList.remove('active');
   document.getElementById('postSubmitBtn').disabled = true;
   document.getElementById('postSuccess').classList.remove('visible');
+  var sb = document.getElementById('successStayBtn');
+  if (sb) sb.style.display = 'none';
+  var ssub = document.getElementById('successSub');
+  if (ssub) ssub.textContent = 'AIが分析してプロフィールに反映します';
   updateAiMeter(50);
   const preview = document.getElementById('photoPreview');
   preview.src = ''; preview.style.display = 'none'; preview.className = '';
@@ -1946,26 +1952,12 @@ function submitPost() {
     posts.unshift(newPost); savePosts(posts);
     var nfts = loadNFTs(); nfts.push(newPost.id); saveNFTs(nfts);
     addXP(30);
+    markPosted();
 
-    // 宿泊パス進捗カウント
-    var posScore = analyzePositivity(text);
-    var successSub = document.querySelector('#postSuccess .success-sub');
-    if (posScore >= 60) {
-      var newCnt = loadPassPosts() + 1;
-      savePassPosts(newCnt);
-      if (!hasPass() && newCnt >= PASS_THRESHOLD) {
-        earnPass();
-        setTimeout(function() {
-          document.getElementById('postSuccess').classList.remove('visible');
-          document.getElementById('passEarnedOverlay').classList.add('visible');
-        }, 600);
-      } else if (!hasPass()) {
-        var rem = PASS_THRESHOLD - newCnt;
-        if (successSub) successSub.textContent = '🏯 宿泊パスまであと' + rem + '投稿！ポジティブに投稿しよう';
-      } else {
-        if (successSub) successSub.textContent = '🏅 宿泊パス取得済み！スケジュールを確認しよう';
-      }
-    }
+    var stayBtn = document.getElementById('successStayBtn');
+    if (stayBtn) stayBtn.style.display = 'block';
+    var successSub = document.getElementById('successSub');
+    if (successSub) successSub.textContent = '🏯 kuari東本町の予約ができるようになりました！';
 
     document.getElementById('postSuccess').classList.add('visible');
   }
