@@ -722,6 +722,140 @@ body {
 .success-fp-heat { font-size: 10px; color: var(--muted); margin-top: 4px; }
 .card-footprint-hint { font-size: 11px; color: var(--muted); cursor: pointer; margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
 .card-footprint-hint:active { color: var(--green); }
+
+/* ===== STAY FEATURE ===== */
+.stay-banner-card {
+  margin: 14px 14px 0;
+  background: linear-gradient(160deg, #160f04, #221808, #12100a);
+  border: 1px solid rgba(200,160,48,0.32);
+  border-radius: 20px; overflow: hidden; cursor: pointer;
+}
+.stay-banner-card:active { opacity: 0.85; }
+.stay-banner-visual {
+  width: 100%; aspect-ratio: 16/9;
+  background: linear-gradient(135deg, #1a1208, #241b08, #0e1810);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52px; position: relative;
+}
+.stay-banner-vbadge {
+  position: absolute; top: 10px; right: 12px;
+  background: rgba(42,154,96,0.85); border-radius: 8px;
+  padding: 3px 9px; font-size: 10px; color: #fff; font-weight: 700;
+}
+.stay-banner-vbadge.earned { background: rgba(200,160,48,0.9); color: #000; }
+.stay-banner-vlabel {
+  position: absolute; bottom: 10px; left: 14px;
+  font-size: 13px; font-weight: 700; color: rgba(240,210,120,0.9);
+}
+.stay-banner-body { padding: 12px 14px 14px; }
+.stay-banner-title { font-size: 16px; font-weight: 800; color: #f0d080; margin-bottom: 4px; }
+.stay-banner-desc { font-size: 12px; color: rgba(240,235,220,0.6); line-height: 1.6; margin-bottom: 10px; }
+.stay-progress-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.stay-progress-label { font-size: 11px; color: var(--gold); }
+.stay-progress-count { font-size: 11px; color: var(--muted); }
+.stay-progress-bar { height: 6px; background: rgba(200,160,48,0.15); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+.stay-progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 3px; transition: width 0.6s ease; }
+.stay-pass-earned-row {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(42,154,96,0.1); border: 1px solid rgba(42,154,96,0.3);
+  border-radius: 12px; padding: 10px 12px; margin-bottom: 12px;
+  font-size: 12px; color: var(--green); font-weight: 600;
+}
+.stay-banner-btn {
+  width: 100%; padding: 13px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #000; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none; font-family: inherit;
+}
+
+/* stay modal */
+.stay-inn-visual {
+  width: 100%; aspect-ratio: 16/9; border-radius: 16px;
+  background: linear-gradient(135deg, #160f04, #221808, #0e1810);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 56px; margin-bottom: 14px;
+  border: 1px solid rgba(200,160,48,0.2);
+}
+.stay-lock-box {
+  background: rgba(200,160,48,0.07); border: 1px solid rgba(200,160,48,0.2);
+  border-radius: 14px; padding: 16px; margin-bottom: 14px; text-align: center;
+}
+.stay-lock-icon { font-size: 32px; margin-bottom: 8px; }
+.stay-lock-title { font-size: 15px; font-weight: 700; color: #f0d080; margin-bottom: 6px; }
+.stay-lock-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+.stay-lock-bar { height: 8px; background: rgba(200,160,48,0.15); border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+.stay-lock-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 4px; }
+.stay-lock-sub { font-size: 11px; color: var(--gold); }
+.stay-how-list { font-size: 12px; color: var(--text); line-height: 1.9; margin-bottom: 16px; }
+.stay-post-cta {
+  width: 100%; padding: 14px; border-radius: 14px;
+  background: linear-gradient(135deg, #1a6040, #2a9060);
+  color: #fff; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none; font-family: inherit;
+}
+.stay-schedule-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.stay-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 16px; }
+.stay-cal-day { text-align: center; }
+.stay-cal-label { font-size: 9px; color: var(--muted); margin-bottom: 3px; }
+.stay-cal-cell {
+  aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; border: 1px solid var(--border);
+  background: var(--bg); cursor: pointer; transition: all 0.15s;
+  font-size: 11px; font-weight: 600; color: var(--text);
+}
+.stay-cal-cell.available { border-color: rgba(200,160,48,0.3); background: rgba(200,160,48,0.06); color: var(--gold); }
+.stay-cal-cell.selected { background: var(--gold); border-color: var(--gold); color: #000; }
+.stay-cal-cell.full { opacity: 0.28; pointer-events: none; }
+.stay-cal-avail { font-size: 7px; color: var(--green); margin-top: 1px; }
+.stay-rooms { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.stay-room-card {
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 11px 13px; cursor: pointer; transition: border-color 0.15s;
+}
+.stay-room-card.selected { border-color: var(--gold); background: rgba(200,160,48,0.05); }
+.stay-room-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.stay-room-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.stay-room-price { font-size: 12px; font-weight: 700; color: var(--gold); }
+.stay-room-desc { font-size: 11px; color: var(--muted); line-height: 1.4; margin-bottom: 5px; }
+.stay-room-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.stay-room-tag {
+  background: rgba(200,160,48,0.08); border: 1px solid rgba(200,160,48,0.18);
+  border-radius: 7px; padding: 2px 7px; font-size: 10px; color: var(--gold);
+}
+.stay-book-btn {
+  width: 100%; padding: 14px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #000; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none; font-family: inherit; margin-bottom: 10px;
+}
+.stay-postfirst-btn {
+  width: 100%; padding: 12px; border-radius: 14px;
+  background: rgba(42,154,96,0.1); border: 1px solid rgba(42,154,96,0.3);
+  color: var(--green); font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+
+/* pass earned overlay */
+.pass-earned-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.88);
+  z-index: 600; display: none; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px; text-align: center;
+  padding: 32px;
+}
+.pass-earned-overlay.visible { display: flex; }
+.pass-earned-icon { font-size: 56px; animation: sparkle 0.8s ease infinite alternate; }
+.pass-earned-title {
+  font-size: 22px; font-weight: 800;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.pass-earned-sub { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.pass-earned-btn {
+  padding: 13px 32px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #000; font-size: 14px; font-weight: 700;
+  cursor: pointer; border: none; font-family: inherit;
+}
 </style>
 </head>
 <body>
@@ -735,6 +869,12 @@ body {
 
   <div class="app">
     <div class="toast-container" id="toastContainer"></div>
+    <div class="pass-earned-overlay" id="passEarnedOverlay">
+      <div class="pass-earned-icon">🏅</div>
+      <div class="pass-earned-title">宿泊パス獲得！</div>
+      <div class="pass-earned-sub">kuari東本町のスケジュール調整に<br>アクセスできるようになりました</div>
+      <button class="pass-earned-btn" onclick="onPassEarnedTap()">スケジュールを確認する</button>
+    </div>
 
     <!-- ===== HOME ===== -->
     <div class="screen" id="screen-home">
@@ -752,6 +892,12 @@ body {
               </div>
             </div>
             <span class="story-label">投稿する</span>
+          </div>
+          <div class="story-item" onclick="showStayModal()">
+            <div class="story-avatar-wrap unread" style="background:linear-gradient(135deg,#8B5E00,#c89820)">
+              <div class="story-avatar" style="background:#1a1208">🏯</div>
+            </div>
+            <span class="story-label">東本町宿泊</span>
           </div>
           <div class="story-item" onclick="showHumanAuthModal()">
             <div class="story-avatar-wrap unread"><div class="story-avatar">⛩️</div></div>
@@ -914,6 +1060,14 @@ body {
       <div class="scroll-area">
         <div class="notif-list">
           <div class="notif-item">
+            <div class="notif-icon">🏯</div>
+            <div class="notif-content">
+              <div class="notif-text">🌱 ポジティブ投稿3件でkuari東本町の宿泊パスを獲得できます！スケジュール調整にアクセス可能になります</div>
+              <div class="notif-time">いま</div>
+              <span class="notif-action-btn" onclick="showStayModal()">詳しく見る</span>
+            </div>
+          </div>
+          <div class="notif-item">
             <div class="notif-icon">🏅</div>
             <div class="notif-content">
               <div class="notif-text">あなたの「出雲大社 朝の参拝」投稿がNFT化されました！ Token #0084</div>
@@ -1046,6 +1200,15 @@ body {
     </div>
   </div>
 
+  <div class="modal-overlay" id="stayModal" onclick="closeModal('stayModal')">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-handle"></div>
+      <span class="modal-close" onclick="closeModal('stayModal')">✕</span>
+      <div class="modal-title">🏯 kuari東本町に宿泊する</div>
+      <div id="stayModalContent"></div>
+    </div>
+  </div>
+
 </div><!-- /.device -->
 
 <script>
@@ -1058,8 +1221,17 @@ const STORE = {
   posts: 'kuari_posts_v2',
   xp: 'kuari_xp',
   likes: 'kuari_likes',
-  nfts: 'kuari_nfts'
+  nfts: 'kuari_nfts',
+  passPosts: 'kuari_pass_posts',
+  hasPass: 'kuari_has_pass'
 };
+
+const PASS_THRESHOLD = 3;
+
+function loadPassPosts() { return parseInt(localStorage.getItem(STORE.passPosts) || '0'); }
+function savePassPosts(n) { localStorage.setItem(STORE.passPosts, String(n)); }
+function hasPass() { return localStorage.getItem(STORE.hasPass) === '1'; }
+function earnPass() { localStorage.setItem(STORE.hasPass, '1'); }
 
 const INITIAL_POSTS = [
   {
@@ -1188,9 +1360,144 @@ function renderFeed() {
   const c = document.getElementById('feedContainer');
   if (!c) return;
   c.innerHTML = '';
+  c.appendChild(createStayBannerCard());
   posts.forEach(function(post) {
     c.appendChild(createFeedCard(post, likes.has(post.id), nfts.includes(post.id)));
   });
+}
+
+// ================================
+// STAY FEATURE
+// ================================
+function createStayBannerCard() {
+  var passCount = loadPassPosts();
+  var pass = hasPass();
+  var pct = Math.min(100, Math.round((passCount / PASS_THRESHOLD) * 100));
+  var el = document.createElement('div');
+  el.className = 'stay-banner-card';
+  el.innerHTML =
+    '<div class="stay-banner-visual">' +
+      '<span>🏯</span>' +
+      '<div class="stay-banner-vlabel">kuari東本町 · 松江市</div>' +
+      (pass
+        ? '<div class="stay-banner-vbadge earned">🏅 パス取得済み</div>'
+        : '<div class="stay-banner-vbadge">空室あり</div>') +
+    '</div>' +
+    '<div class="stay-banner-body">' +
+      '<div class="stay-banner-title">kuari東本町に宿泊する</div>' +
+      '<div class="stay-banner-desc">ポジティブ投稿でパスを獲得し、スケジュール調整にアクセスしよう。</div>' +
+      (pass
+        ? '<div class="stay-pass-earned-row">✅ 宿泊パス取得済み！スケジュールを確認できます</div>'
+        : '<div class="stay-progress-row"><span class="stay-progress-label">🌱 宿泊パスまで</span><span class="stay-progress-count">' + passCount + ' / ' + PASS_THRESHOLD + ' 投稿</span></div>' +
+          '<div class="stay-progress-bar"><div class="stay-progress-fill" style="width:' + pct + '%"></div></div>') +
+      '<button class="stay-banner-btn">' +
+        (pass ? 'スケジュールを調整する →' : 'ポジティブ投稿してパスを獲得する →') +
+      '</button>' +
+    '</div>';
+  el.addEventListener('click', showStayModal);
+  return el;
+}
+
+function showStayModal() {
+  var c = document.getElementById('stayModalContent');
+  if (!c) return;
+  var pass = hasPass();
+  var passCount = loadPassPosts();
+  if (!pass) {
+    var pct = Math.min(100, Math.round((passCount / PASS_THRESHOLD) * 100));
+    c.innerHTML =
+      '<div class="stay-inn-visual">🏯</div>' +
+      '<div class="stay-lock-box">' +
+        '<div class="stay-lock-icon">🔒</div>' +
+        '<div class="stay-lock-title">宿泊パスを獲得しよう</div>' +
+        '<div class="stay-lock-desc">AIスコア60%以上のポジティブ投稿を' + PASS_THRESHOLD + '件するとkuari東本町のスケジュール調整にアクセスできます。</div>' +
+        '<div class="stay-lock-bar"><div class="stay-lock-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="stay-lock-sub">' + passCount + ' / ' + PASS_THRESHOLD + ' 件完了</div>' +
+      '</div>' +
+      '<div class="stay-how-list">' +
+        '📸 ポジティブな体験を投稿する<br>' +
+        '🌱 足跡が育ち宿泊パスを獲得<br>' +
+        '🏯 kuari東本町スケジュールにアクセス<br>' +
+        '🏅 宿泊NFTで体験を永続記録' +
+      '</div>' +
+      '<button class="stay-post-cta" onclick="postFromStay()">🌱 ポジティブ投稿して宿泊パスを獲得する</button>';
+  } else {
+    c.innerHTML = buildScheduleHTML();
+  }
+  showModal('stayModal');
+}
+
+function buildScheduleHTML() {
+  var DAY_NAMES = ['日','月','火','水','木','金','土'];
+  var AVAIL = [true, false, true, true, false, true, true];
+  var today = new Date();
+  var cells = '';
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    var av = AVAIL[i];
+    cells +=
+      '<div class="stay-cal-day">' +
+        '<div class="stay-cal-label">' + DAY_NAMES[d.getDay()] + '</div>' +
+        '<div class="stay-cal-cell ' + (av ? 'available' : 'full') + '" onclick="selectCalDay(this)">' +
+          d.getDate() + (av ? '<div class="stay-cal-avail">空き</div>' : '') +
+        '</div>' +
+      '</div>';
+  }
+  return (
+    '<div class="stay-inn-visual">🏯</div>' +
+    '<div class="stay-pass-earned-row">✅ 宿泊パス取得済み！予約できます</div>' +
+    '<div class="stay-schedule-title">📅 日程を選ぶ</div>' +
+    '<div class="stay-calendar">' + cells + '</div>' +
+    '<div class="stay-schedule-title">🛏 部屋を選ぶ</div>' +
+    '<div class="stay-rooms">' +
+      '<div class="stay-room-card selected" onclick="selectRoom(this)">' +
+        '<div class="stay-room-header"><span class="stay-room-name">🌊 山陰の風 — 和室8畳</span><span class="stay-room-price">¥15,000/泊</span></div>' +
+        '<div class="stay-room-desc">縁側から日本庭園を望む静寂の空間。</div>' +
+        '<div class="stay-room-tags"><span class="stay-room-tag">和室</span><span class="stay-room-tag">縁側あり</span><span class="stay-room-tag">庭園ビュー</span></div>' +
+      '</div>' +
+      '<div class="stay-room-card" onclick="selectRoom(this)">' +
+        '<div class="stay-room-header"><span class="stay-room-name">🏮 出雲の灯 — 和洋室</span><span class="stay-room-price">¥18,000/泊</span></div>' +
+        '<div class="stay-room-desc">テラスから松江の夜景が広がります。</div>' +
+        '<div class="stay-room-tags"><span class="stay-room-tag">和洋室</span><span class="stay-room-tag">テラス付き</span><span class="stay-room-tag">夜景</span></div>' +
+      '</div>' +
+      '<div class="stay-room-card" onclick="selectRoom(this)">' +
+        '<div class="stay-room-header"><span class="stay-room-name">⛩️ 神在の間 — 特別室</span><span class="stay-room-price">¥28,000/泊</span></div>' +
+        '<div class="stay-room-desc">最上階、プライベート露天風呂付き。</div>' +
+        '<div class="stay-room-tags"><span class="stay-room-tag">特別室</span><span class="stay-room-tag">露天風呂</span><span class="stay-room-tag">最上階</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<button class="stay-book-btn" onclick="bookStay()">予約を確定する</button>' +
+    '<button class="stay-postfirst-btn" onclick="postFromStay()">🌱 宿泊体験を先に投稿する</button>'
+  );
+}
+
+function selectCalDay(el) {
+  document.querySelectorAll('.stay-cal-cell.available').forEach(function(c) { c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+function selectRoom(el) {
+  document.querySelectorAll('.stay-room-card').forEach(function(c) { c.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+function bookStay() {
+  closeModal('stayModal');
+  showToast('🏯 予約が確定しました！宿泊当日に体験を投稿してNFTをゲットしよう', 'success');
+}
+
+function postFromStay() {
+  closeModal('stayModal');
+  showScreen('post');
+  setTimeout(function() {
+    var ta = document.getElementById('postTextarea');
+    if (ta && !ta.value) { ta.value = '#kuari東本町 '; onPostTextChange(); }
+  }, 350);
+}
+
+function onPassEarnedTap() {
+  document.getElementById('passEarnedOverlay').classList.remove('visible');
+  showStayModal();
 }
 
 function createFeedCard(post, liked, minted) {
@@ -1639,6 +1946,27 @@ function submitPost() {
     posts.unshift(newPost); savePosts(posts);
     var nfts = loadNFTs(); nfts.push(newPost.id); saveNFTs(nfts);
     addXP(30);
+
+    // 宿泊パス進捗カウント
+    var posScore = analyzePositivity(text);
+    var successSub = document.querySelector('#postSuccess .success-sub');
+    if (posScore >= 60) {
+      var newCnt = loadPassPosts() + 1;
+      savePassPosts(newCnt);
+      if (!hasPass() && newCnt >= PASS_THRESHOLD) {
+        earnPass();
+        setTimeout(function() {
+          document.getElementById('postSuccess').classList.remove('visible');
+          document.getElementById('passEarnedOverlay').classList.add('visible');
+        }, 600);
+      } else if (!hasPass()) {
+        var rem = PASS_THRESHOLD - newCnt;
+        if (successSub) successSub.textContent = '🏯 宿泊パスまであと' + rem + '投稿！ポジティブに投稿しよう';
+      } else {
+        if (successSub) successSub.textContent = '🏅 宿泊パス取得済み！スケジュールを確認しよう';
+      }
+    }
+
     document.getElementById('postSuccess').classList.add('visible');
   }
 }
