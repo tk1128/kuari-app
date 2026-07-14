@@ -731,6 +731,32 @@ body {
 .card-footprint-hint { font-size: 11px; color: var(--muted); cursor: pointer; margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
 .card-footprint-hint:active { color: var(--green); }
 
+/* ===== STAY TOP CARD ===== */
+.stay-top-card {
+  margin: 0 14px 8px;
+  background: linear-gradient(160deg, #160f04, #221808, #0e1810);
+  border: 1px solid rgba(200,160,48,0.35);
+  border-radius: 18px; overflow: hidden; cursor: pointer;
+  display: flex; align-items: stretch;
+}
+.stay-top-card:active { opacity: 0.85; }
+.stay-top-left {
+  width: 76px; flex-shrink: 0;
+  background: linear-gradient(135deg, #1a1208, #241b08);
+  display: flex; align-items: center; justify-content: center; font-size: 34px;
+}
+.stay-top-right { flex: 1; padding: 12px 14px 12px; }
+.stay-top-name { font-size: 10px; color: rgba(200,160,48,0.55); margin-bottom: 3px; font-weight: 600; letter-spacing: 0.3px; }
+.stay-top-msg { font-size: 13px; font-weight: 700; color: #f0d080; margin-bottom: 9px; line-height: 1.4; }
+.stay-top-cta {
+  display: inline-block; padding: 7px 13px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; border: none; cursor: pointer; font-family: inherit;
+  background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #000;
+}
+.stay-top-cta.unlocked {
+  background: rgba(42,154,96,0.15); border: 1px solid rgba(42,154,96,0.4); color: var(--green);
+}
+
 /* ===== STAY FEATURE ===== */
 .stay-banner-card {
   margin: 14px 14px 0;
@@ -928,15 +954,7 @@ body {
             <span class="story-label">Nami</span>
           </div>
         </div>
-        <div class="concept-strip">
-          <div class="concept-step"><div class="concept-step-icon">📝</div><div class="concept-step-label">投稿する</div></div>
-          <div class="concept-arrow">→</div>
-          <div class="concept-step"><div class="concept-step-icon">🤖</div><div class="concept-step-label">AI分析</div></div>
-          <div class="concept-arrow">→</div>
-          <div class="concept-step"><div class="concept-step-icon">🌱</div><div class="concept-step-label">足跡蓄積</div></div>
-          <div class="concept-arrow">→</div>
-          <div class="concept-step"><div class="concept-step-icon">🌏</div><div class="concept-step-label">招待</div></div>
-        </div>
+        <div id="stayTopCard"></div>
         <div class="feed" id="feedContainer"></div>
       </div>
     </div>
@@ -1348,7 +1366,7 @@ function showScreen(name) {
   const ni = document.getElementById('nav-' + name);
   if (ni) ni.classList.add('active');
   document.getElementById('bottomNav').style.display = (name === 'post') ? 'none' : '';
-  if (name === 'home') renderFeed();
+  if (name === 'home') { renderFeed(); renderStayTopCard(); }
   if (name === 'explore') { var il = document.getElementById('inviteList'); if (il) il.innerHTML = ''; renderInvite(); }
   if (name === 'profile') initProfile();
   if (name === 'post') resetPostForm();
@@ -1364,7 +1382,6 @@ function renderFeed() {
   const c = document.getElementById('feedContainer');
   if (!c) return;
   c.innerHTML = '';
-  c.appendChild(createStayBannerCard());
   posts.forEach(function(post) {
     c.appendChild(createFeedCard(post, likes.has(post.id), nfts.includes(post.id)));
   });
@@ -1373,6 +1390,24 @@ function renderFeed() {
 // ================================
 // STAY FEATURE
 // ================================
+function renderStayTopCard() {
+  var el = document.getElementById('stayTopCard');
+  if (!el) return;
+  var posted = hasPosted();
+  el.className = 'stay-top-card';
+  el.onclick = showStayModal;
+  el.innerHTML =
+    '<div class="stay-top-left">🏯</div>' +
+    '<div class="stay-top-right">' +
+      '<div class="stay-top-name">kuari東本町 · 松江市</div>' +
+      (posted
+        ? '<div class="stay-top-msg">✅ 予約できます！<br>日程と部屋を選んで予約しよう</div>' +
+          '<button class="stay-top-cta unlocked" onclick="event.stopPropagation();showStayModal()">🏯 スケジュールを確認する →</button>'
+        : '<div class="stay-top-msg">写真を1枚投稿すると<br>kuari東本町を予約できます</div>' +
+          '<button class="stay-top-cta" onclick="event.stopPropagation();showScreen(\'post\')">📷 投稿して予約する →</button>') +
+    '</div>';
+}
+
 function createStayBannerCard() {
   var posted = hasPosted();
   var el = document.createElement('div');
@@ -1953,6 +1988,7 @@ function submitPost() {
     var nfts = loadNFTs(); nfts.push(newPost.id); saveNFTs(nfts);
     addXP(30);
     markPosted();
+    renderStayTopCard();
 
     var stayBtn = document.getElementById('successStayBtn');
     if (stayBtn) stayBtn.style.display = 'block';
